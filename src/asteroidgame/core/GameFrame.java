@@ -1,0 +1,105 @@
+package asteroidgame.core;
+
+/**
+ * Read-only snapshot of the current game screen and status.
+ * The UI receives this object and renders it as retro arcade text.
+ */
+public class GameFrame {
+    private int boardWidth;
+    private int boardHeight;
+    private char[][] grid;
+    private int score;
+    private int lives;
+    private int maxLives;
+    private int level;
+    private int maxLevel;
+    private String levelName;
+    private int nextLevelScore;
+    private int asteroidsDestroyed;
+    private int powerUpsCollected;
+    private int frameCount;
+    private GameState state;
+    private boolean playerHitFlash;
+    private int fireRateLevel;
+    private int fireRateCap;
+    private int shotLevel;
+    private int shotCap;
+    private int shieldCharges;
+    private int shieldCap;
+    private int dangerLevel;
+    private int dangerLimit;
+    private String statusMessage;
+    private String[] upgradeMenuLines;
+
+    public GameFrame(int boardWidth, int boardHeight, char[][] grid,
+                     int score, int lives, int maxLives, int level, int maxLevel,
+                     String levelName, int nextLevelScore,
+                     int asteroidsDestroyed, int powerUpsCollected,
+                     int frameCount, GameState state, boolean playerHitFlash,
+                     int fireRateLevel, int fireRateCap,
+                     int shotLevel, int shotCap,
+                     int shieldCharges, int shieldCap,
+                     int dangerLevel, int dangerLimit,
+                     String statusMessage,
+                     String[] upgradeMenuLines) {
+        this.boardWidth = boardWidth;
+        this.boardHeight = boardHeight;
+        this.grid = grid;
+        this.score = score;
+        this.lives = lives;
+        this.maxLives = maxLives;
+        this.level = level;
+        this.maxLevel = maxLevel;
+        this.levelName = levelName;
+        this.nextLevelScore = nextLevelScore;
+        this.asteroidsDestroyed = asteroidsDestroyed;
+        this.powerUpsCollected = powerUpsCollected;
+        this.frameCount = frameCount;
+        this.state = state;
+        this.playerHitFlash = playerHitFlash;
+        this.fireRateLevel = fireRateLevel;
+        this.fireRateCap = fireRateCap;
+        this.shotLevel = shotLevel;
+        this.shotCap = shotCap;
+        this.shieldCharges = shieldCharges;
+        this.shieldCap = shieldCap;
+        this.dangerLevel = dangerLevel;
+        this.dangerLimit = dangerLimit;
+        this.statusMessage = statusMessage;
+        this.upgradeMenuLines = upgradeMenuLines;
+    }
+
+    public int getBoardWidth() { return boardWidth; }
+    public int getBoardHeight() { return boardHeight; }
+    public char[][] getGrid() { return grid; }
+    public int getScore() { return score; }
+    public int getLives() { return lives; }
+    public int getMaxLives() { return maxLives; }
+    public int getLevel() { return level; }
+    public int getMaxLevel() { return maxLevel; }
+    public String getLevelName() { return levelName; }
+    public int getNextLevelScore() { return nextLevelScore; }
+    public int getAsteroidsDestroyed() { return asteroidsDestroyed; }
+    public int getPowerUpsCollected() { return powerUpsCollected; }
+    public int getFrameCount() { return frameCount; }
+    public GameState getState() { return state; }
+    public boolean isPlayerHitFlash() { return playerHitFlash; }
+    public int getFireRateLevel() { return fireRateLevel; }
+    public int getFireRateCap() { return fireRateCap; }
+    public int getShotLevel() { return shotLevel; }
+    public int getShotCap() { return shotCap; }
+    public int getShieldCharges() { return shieldCharges; }
+    public int getShieldCap() { return shieldCap; }
+    public int getDangerLevel() { return dangerLevel; }
+    public int getDangerLimit() { return dangerLimit; }
+    public String getStatusMessage() { return statusMessage; }
+    public String[] getUpgradeMenuLines() { return upgradeMenuLines; }
+
+    public boolean isStartScreen() { return state == GameState.START_SCREEN; }
+    public boolean isLevelIntro() { return state == GameState.LEVEL_INTRO; }
+    public boolean isPlaying() { return state == GameState.PLAYING; }
+    public boolean isPaused() { return state == GameState.PAUSED; }
+    public boolean isLevelUp() { return state == GameState.LEVEL_UP; }
+    public boolean isVictory() { return state == GameState.VICTORY; }
+    public boolean isGameOver() { return state == GameState.GAME_OVER; }
+}

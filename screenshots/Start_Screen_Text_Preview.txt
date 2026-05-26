@@ -1,0 +1,27 @@
+╔═══════════════════════════════════════╗
+║      ✦ RETRO ASTEROID BLASTER ✦       ║
+╠═══════════════════════════════════════╣
+║ SCORE 0000  HP 03/03  LV 1/6  DNG 0/5 ║
+╠───────────────────────────────────────╣
+║·                                      ║
+║                                       ║
+║     ARCADE MODE: 6 LEVEL CAMPAIGN     ║
+║                                       ║
+║     BIG ASTEROIDS ONLY: ◉ → ● → ◎     ║
+║                                 ·     ║
+║    NO TINY TARGETS - WIDE HITBOXES    ║
+║                    ·                  ║
+║    SHOOT, SURVIVE, CLEAR, UPGRADE     ║
+║       ·                               ║
+║     MISSED ASTEROIDS RAISE DANGER     ║
+║                                       ║
+║                                       ║
+║         PRESS ENTER TO START          ║
+║                                       ║
+║                                       ║
+║                           ·           ║
+║                                       ║
+╠───────────────────────────────────────╣
+║         ENTER START | Q QUIT          ║
+║                 READY                 ║
+╚═══════════════════════════════════════╝
