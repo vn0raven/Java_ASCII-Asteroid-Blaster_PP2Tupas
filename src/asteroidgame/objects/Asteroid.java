@@ -1,6 +1,7 @@
 package asteroidgame.objects;
 
 import asteroidgame.core.GameBoard;
+import asteroidgame.core.GameColors;
 import asteroidgame.core.GameConfig;
 
 /**
@@ -48,14 +49,15 @@ public abstract class Asteroid extends GameObject {
 
     @Override
     public void draw(GameBoard board) {
-        if (!active) {
-            return;
-        }
+        if (!active) return;
 
-        // Draw as a 3-cell-wide asteroid: easier to see and easier to hit.
-        board.placeSymbol(x - 1, y, symbol);
-        board.placeSymbol(x, y, symbol);
-        board.placeSymbol(x + 1, y, symbol);
+        java.awt.Color asteroidColor = (getDamageStage() <= CRACKED_STAGE) 
+            ? GameColors.ASTEROID_RED 
+            : GameColors.ASTEROID_BROWN;
+
+        board.placeSymbol(x - 1, y, symbol); // Left
+        board.placeSymbol(x, y, symbol);     // Center
+        board.placeSymbol(x + 1, y, symbol); // Right
     }
 
     /**

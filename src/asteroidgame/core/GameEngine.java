@@ -9,12 +9,14 @@ import asteroidgame.managers.ScoreManager;
 import asteroidgame.managers.UpgradeManager;
 import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
+import asteroidgame.objects.Drawable;
 import asteroidgame.objects.Explosion;
 import asteroidgame.objects.ExtraLifePowerUp;
 import asteroidgame.objects.HeavyAsteroid;
 import asteroidgame.objects.NormalAsteroid;
 import asteroidgame.objects.Player;
 import asteroidgame.objects.PowerUp;
+import asteroidgame.objects.Updatable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -82,18 +84,21 @@ public class GameEngine {
         if (state == GameState.START_SCREEN) {
             // Move cursor up
             if (input.isUpRequested()) {
+                SoundManager.playSound("scrollup.wav");
                 menuSelectedIndex--;
                 if (menuSelectedIndex < 0) menuSelectedIndex = 2; // Loop to bottom
             }
             
             // Move cursor down
             if (input.isDownRequested()) {
+                SoundManager.playSound("scrolldown.wav");
                 menuSelectedIndex++;
                 if (menuSelectedIndex > 2) menuSelectedIndex = 0; // Loop to top
             }
 
             // Execute selection
             if (input.isStartRequested() || input.isShootRequested()) {
+                SoundManager.playSound("click.wav");
                 if (menuSelectedIndex == 0) {
                     resetAndShowLevelIntro();
                 } else if (menuSelectedIndex == 1) {
@@ -119,6 +124,7 @@ public class GameEngine {
                 return;
             }
             if (input.isStartRequested() || input.isShootRequested()) {
+                SoundManager.playSound("click.wav");
                 clearDangerousObjects();
                 setStatusMessage("LEVEL " + scoreManager.getLevel() + " START!");
                 state = GameState.PLAYING;
@@ -215,7 +221,10 @@ public class GameEngine {
         removeInactiveObjects();
 
         if (!player.isAlive()) {
+            SoundManager.stopMusic(); 
+            
             highScoreManager.saveHighScore(scoreManager.getScore()); 
+            clearDangerousObjects();
             state = GameState.GAME_OVER;
             setStatusMessage("GAME OVER");
             return;
@@ -230,20 +239,26 @@ public class GameEngine {
         }
 
         if (scoreManager.isReadyForLevelUp()) {
+            clearDangerousObjects(); 
             state = GameState.LEVEL_UP;
             setStatusMessage("LEVEL CLEAR - CHOOSE UPGRADE");
         }
+
     }
 
     private void resetToStartScreen() {
+        SoundManager.playMusic("menu_music.wav"); 
+        
         resetFieldData();
         state = GameState.START_SCREEN;
         quitRequested = false;
-        menuSelectedIndex = 0; // Starts cursor on "PLAY"
+        menuSelectedIndex = 0; 
         setStatusMessage("READY");
     }
 
     private void resetAndShowLevelIntro() {
+        SoundManager.playMusic("game_music.wav"); 
+        
         resetFieldData();
         state = GameState.LEVEL_INTRO;
         quitRequested = false;
@@ -289,6 +304,9 @@ public class GameEngine {
 
         if (input.isShootRequested()) {
             List<Bullet> firedBullets = player.shoot(frameCount);
+            if(!firedBullets.isEmpty()){
+                SoundManager.playSound("shoot.wav");
+            }
             bullets.addAll(firedBullets);
         }
     }
@@ -305,23 +323,11 @@ public class GameEngine {
     }
 
     private void updateObjects() {
-        player.update();
-
-        for (Bullet bullet : bullets) {
-            bullet.update();
-        }
-
-        for (Asteroid asteroid : asteroids) {
-            asteroid.update();
-        }
-
-        for (PowerUp powerUp : powerUps) {
-            powerUp.update();
-        }
-
-        for (Explosion explosion : explosions) {
-            explosion.update();
-        }
+        player.update();   
+        updateList(bullets);
+        updateList(asteroids);
+        updateList(powerUps);
+        updateList(explosions);
     }
 
     private void checkCollisions() {
@@ -331,8 +337,10 @@ public class GameEngine {
 
         if (result.getDestroyedCount() > 0) {
             setStatusMessage("ASTEROID DESTROYED  +" + result.getEarnedPoints());
+            SoundManager.playSound("explosion.wav");
         } else if (result.getDamagedCount() > 0) {
             setStatusMessage("ASTEROID CRACKED  +" + result.getEarnedPoints());
+            SoundManager.playSound("hit.wav");
         }
 
         int collected = collisionManager.checkPlayerPowerUpCollision(player, powerUps);
@@ -425,21 +433,11 @@ public class GameEngine {
 
         if (state == GameState.PLAYING || state == GameState.PAUSED
                 || state == GameState.LEVEL_UP || state == GameState.GAME_OVER) {
-            for (PowerUp powerUp : powerUps) {
-                powerUp.draw(board);
-            }
-
-            for (Explosion explosion : explosions) {
-                explosion.draw(board);
-            }
-
-            for (Asteroid asteroid : asteroids) {
-                asteroid.draw(board);
-            }
-
-            for (Bullet bullet : bullets) {
-                bullet.draw(board);
-            }
+            
+            drawList(explosions);
+            drawList(powerUps);
+            drawList(asteroids);
+            drawList(bullets);
 
             if (player.isAlive()) {
                 player.setHitSymbol(hitFlashCounter > 0);
@@ -480,5 +478,20 @@ public class GameEngine {
 
     public boolean isQuitRequested() {
         return quitRequested;
+    }
+
+    private void updateList(List<? extends Updatable> list) {
+        for (Updatable item : list) {
+            item.update();
+        }
+    }
+
+    private void drawList(List<? extends Drawable> list) {
+        for (Drawable item : list) {
+            if (item.isActive()) {
+                item.draw(board);
+            }
+        }
+
     }
 }

@@ -35,9 +35,9 @@ public class FixedGridPanel extends JPanel {
         setFocusable(true);
 
         FontMetrics metrics = getFontMetrics(gameFont);
-        this.cellWidth = Math.max(14, metrics.charWidth('W') + 2);
-        this.cellHeight = Math.max(22, metrics.getHeight() + 2);
-        this.baselineOffset = metrics.getAscent() + 1;
+        this.cellWidth = metrics.charWidth('W');
+        this.cellHeight = metrics.getHeight();
+        this.baselineOffset = metrics.getAscent();
 
         setPreferredSize(new Dimension(columns * cellWidth, rows * cellHeight));
         clearLines();
@@ -72,56 +72,74 @@ public class FixedGridPanel extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics graphics) {
-        super.paintComponent(graphics);
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        Graphics2D g2 = (Graphics2D) graphics;
-        g2.setFont(gameFont);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setColor(new Color(10, 10, 15)); 
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        g.setFont(gameFont);
 
         for (int row = 0; row < rows; row++) {
-            String line = lines[row];
+            if (lines[row] == null) continue;
+            
+            String currentLine = lines[row];
 
-            for (int col = 0; col < columns; col++) {
-                char symbol = line.charAt(col);
-                g2.setColor(getColorForSymbol(symbol));
-                int x = col * cellWidth;
-                int y = row * cellHeight + baselineOffset;
-                g2.drawString(String.valueOf(symbol), x, y);
+            for (int col = 0; col < currentLine.length(); col++) {
+                char c = currentLine.charAt(col);
+                
+                if (c != ' ') {
+                    g.setColor(getColorForSymbol(c)); 
+                    
+                    int drawX = col * cellWidth;
+                    int drawY = row * cellHeight + baselineOffset;
+                    g.drawString(String.valueOf(c), drawX, drawY);
+                }
             }
         }
     }
-
+    
     private Color getColorForSymbol(char symbol) {
         if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) {
-            return new Color(120, 255, 160);
+            return new Color(120, 255, 160); // Mint Green
         }
 
         if (symbol == GameSymbols.PLAYER_HIT) {
-            return new Color(255, 100, 100);
+            return new Color(255, 100, 100); // Damage Red
         }
 
         if (symbol == GameSymbols.BULLET) {
-            return new Color(120, 220, 255);
+            return new Color(120, 220, 255); // Neon Blue
         }
 
         if (symbol == GameSymbols.ASTEROID_WEAK || symbol == GameSymbols.ASTEROID_NORMAL || symbol == GameSymbols.ASTEROID_HEAVY) {
-            return new Color(255, 190, 90);
+            return new Color(255, 190, 90); // Asteroid Orange/Brown
         }
 
         if (symbol == GameSymbols.POWER_UP_LIFE || symbol == GameSymbols.LIFE || symbol == GameSymbols.SHIELD) {
-            return new Color(255, 235, 100);
+            return new Color(255, 235, 100); // Gold/Yellow
         }
 
         if (symbol == '╔' || symbol == '╗' || symbol == '╚' || symbol == '╝' || symbol == '║' || symbol == '═' || symbol == '╠' || symbol == '╣' || symbol == '─') {
-            return new Color(170, 210, 255);
+            return new Color(170, 210, 255); // UI Border Blue
         }
 
-        if (symbol == '·') {
-            return new Color(70, 70, 90);
+        if (symbol == '·' || symbol == '.') {
+            return new Color(70, 70, 90); // Faded Starfield Grey
         }
 
-        return Color.WHITE;
+        if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') {
+            return new Color(255, 140, 0); 
+        }
+
+        if (symbol == '+' || Character.isDigit(symbol)) {
+            return new Color(50, 255, 50); 
+        }
+
+        return Color.WHITE; // Default fallback color
     }
 
     private String repeat(char character, int count) {
