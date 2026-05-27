@@ -125,6 +125,14 @@ public class RetroTextRenderer {
             if (row == 15) return "PRESS R TO RESTART";
         }
 
+        if (frame.isHighScoreScreen()) {
+            if (row == 2) return "✦ LOCAL LEADERBOARD ✦";    
+            if (row == 6) return "1. JACA    " + padLeft(String.valueOf(frame.getHighScore()), 6, '0');
+            if (row == 8) return "2. CPU     001000";
+            if (row == 10) return "3. CPU     000500";     
+            if (row == 15) return "PRESS ENTER OR M TO RETURN";
+        }
+
         return null;
     }
 
@@ -167,12 +175,14 @@ public class RetroTextRenderer {
 
     private String buildControls(GameFrame frame) {
         if (frame.isStartScreen()) return "ENTER START | Q QUIT";
-        if (frame.isLevelIntro()) return "ENTER LAUNCH | Q QUIT";
+        if (frame.isHighScoreScreen()) return "ENTER RETURN | Q QUIT";
+        if (frame.isLevelIntro()) return "ENTER LAUNCH | M MENU | Q QUIT";
         if (frame.isLevelUp()) return "1 FIRE | 2 LIFE | 3 SHOT | 4 SHIELD";
-        if (frame.isVictory()) return "R RESTART | Q QUIT";
-        if (frame.isGameOver()) return "R RESTART | Q QUIT";
-        if (frame.isPaused()) return "P RESUME | Q QUIT";
-        return "A/← D/→ MOVE | SPACE FIRE | P PAUSE";
+        if (frame.isVictory()) return "R RESTART | M MENU | Q QUIT";
+        if (frame.isGameOver()) return "R RESTART | M MENU | Q QUIT";
+        if (frame.isPaused()) return "P RESUME | M MENU | Q QUIT";   
+
+        return "A/← D/→ MOVE | SPACE FIRE | P PAUSE"; 
     }
 
     private String buildStatus(GameFrame frame) {

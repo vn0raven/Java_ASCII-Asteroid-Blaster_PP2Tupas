@@ -15,6 +15,7 @@ public class KeyboardInput extends KeyAdapter {
     private boolean upRequested;
     private boolean downRequested;
     private boolean shootRequested;
+    private boolean menuRequested;
     private boolean startRequested;
     private boolean pauseRequested;
     private boolean restartRequested;
@@ -35,6 +36,7 @@ public class KeyboardInput extends KeyAdapter {
         if (key == KeyEvent.VK_ENTER) startRequested = true;
         if (key == KeyEvent.VK_P) pauseRequested = true;
         if (key == KeyEvent.VK_R) restartRequested = true;
+        if (key == KeyEvent.VK_M) menuRequested = true;
         if (key == KeyEvent.VK_Q) quitRequested = true;
 
         if (key == KeyEvent.VK_1) upgradeChoice = 1;
@@ -61,6 +63,7 @@ public class KeyboardInput extends KeyAdapter {
                 consumePauseRequest(),
                 consumeRestartRequest(),
                 quitRequested,
+                consumeMenuRequest(),
                 consumeUpgradeChoice()
         );
     }
@@ -93,5 +96,13 @@ public class KeyboardInput extends KeyAdapter {
         int choice = upgradeChoice;
         upgradeChoice = 0;
         return choice;
+    }
+    
+    private boolean consumeMenuRequest() {
+        if (menuRequested) { 
+            menuRequested = false; 
+            return true; 
+        } 
+        return false;
     }
 }

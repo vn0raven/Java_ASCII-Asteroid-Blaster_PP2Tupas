@@ -14,13 +14,15 @@ public class InputState {
     private boolean pauseRequested;
     private boolean restartRequested;
     private boolean quitRequested;
+    private boolean menuRequested; 
     private int upgradeChoice;
 
     public InputState(boolean leftPressed, boolean rightPressed, 
                       boolean upRequested, boolean downRequested,
                       boolean shootRequested, boolean startRequested, 
                       boolean pauseRequested, boolean restartRequested, 
-                      boolean quitRequested, int upgradeChoice) {
+                      boolean quitRequested, boolean menuRequested, 
+                      int upgradeChoice) {
         this.leftPressed = leftPressed;
         this.rightPressed = rightPressed;
         this.upRequested = upRequested;
@@ -30,6 +32,7 @@ public class InputState {
         this.pauseRequested = pauseRequested;
         this.restartRequested = restartRequested;
         this.quitRequested = quitRequested;
+        this.menuRequested = menuRequested; 
         this.upgradeChoice = upgradeChoice;
     }
 
@@ -42,6 +45,7 @@ public class InputState {
     public boolean isPauseRequested() { return pauseRequested; }
     public boolean isRestartRequested() { return restartRequested; }
     public boolean isQuitRequested() { return quitRequested; }
+    public boolean isMenuRequested() { return menuRequested; }
     public int getUpgradeChoice() { return upgradeChoice; }
-    
+
 }

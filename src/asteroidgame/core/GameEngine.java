@@ -2,6 +2,7 @@ package asteroidgame.core;
 
 import asteroidgame.managers.CollisionManager;
 import asteroidgame.managers.CollisionResult;
+import asteroidgame.managers.HighScoreManager;
 import asteroidgame.managers.ScoreManager;
 import asteroidgame.managers.UpgradeManager;
 import asteroidgame.objects.Asteroid;
@@ -34,6 +35,7 @@ public class GameEngine {
     private ScoreManager scoreManager;
     private UpgradeManager upgradeManager;
     private Random random;
+    private HighScoreManager highScoreManager;
 
     private int frameCount;
     private int asteroidsDestroyed;
@@ -45,6 +47,7 @@ public class GameEngine {
     private GameState state;
     private boolean quitRequested;
     private int menuSelectedIndex;
+    
 
     public GameEngine() {
         board = new GameBoard(BOARD_WIDTH, BOARD_HEIGHT);
@@ -56,6 +59,7 @@ public class GameEngine {
         upgradeManager = new UpgradeManager();
         random = new Random();
         resetToStartScreen();
+        highScoreManager = new HighScoreManager();
     }
 
     public void update(InputState input) {
@@ -84,7 +88,8 @@ public class GameEngine {
                 if (menuSelectedIndex == 0) {
                     resetAndShowLevelIntro();
                 } else if (menuSelectedIndex == 1) {
-                    setStatusMessage("HIGH SCORES COMING SOON!");
+                    state = GameState.HIGH_SCORE_SCREEN; 
+                    setStatusMessage("LOCAL LEADERBOARD");
                 } else if (menuSelectedIndex == 2) {
                     quitRequested = true;
                 }
@@ -92,7 +97,18 @@ public class GameEngine {
             return;
         }
 
+        if (state == GameState.HIGH_SCORE_SCREEN) {
+            if (input.isMenuRequested() || input.isStartRequested()) {
+                resetToStartScreen();
+            }
+            return;
+        }
+
         if (state == GameState.LEVEL_INTRO) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isStartRequested() || input.isShootRequested()) {
                 clearDangerousObjects();
                 setStatusMessage("LEVEL " + scoreManager.getLevel() + " START!");
@@ -102,6 +118,10 @@ public class GameEngine {
         }
 
         if (state == GameState.VICTORY) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isRestartRequested() || input.isStartRequested()) {
                 resetAndShowLevelIntro();
             }
@@ -109,6 +129,10 @@ public class GameEngine {
         }
 
         if (state == GameState.GAME_OVER) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isRestartRequested() || input.isStartRequested()) {
                 resetAndShowLevelIntro();
             }
@@ -121,6 +145,10 @@ public class GameEngine {
         }
 
         if (state == GameState.PAUSED) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isPauseRequested()) {
                 state = GameState.PLAYING;
                 setStatusMessage("RESUMED");
@@ -169,12 +197,14 @@ public class GameEngine {
         removeInactiveObjects();
 
         if (!player.isAlive()) {
+            highScoreManager.saveHighScore(scoreManager.getScore()); 
             state = GameState.GAME_OVER;
             setStatusMessage("GAME OVER");
             return;
         }
 
         if (scoreManager.isFinalLevelCleared()) {
+            highScoreManager.saveHighScore(scoreManager.getScore()); 
             clearDangerousObjects();
             state = GameState.VICTORY;
             setStatusMessage("MISSION COMPLETE");
@@ -465,7 +495,8 @@ public class GameEngine {
                 GameConfig.DANGER_LIMIT,
                 statusMessage,
                 upgradeManager.buildUpgradeMenu(player),
-                menuSelectedIndex
+                menuSelectedIndex,
+                highScoreManager.getHighScore()
         );
     }
 
