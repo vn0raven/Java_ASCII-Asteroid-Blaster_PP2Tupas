@@ -30,6 +30,7 @@ public class GameFrame {
     private int dangerLimit;
     private String statusMessage;
     private String[] upgradeMenuLines;
+    private int menuSelectedIndex;
 
     public GameFrame(int boardWidth, int boardHeight, char[][] grid,
                      int score, int lives, int maxLives, int level, int maxLevel,
@@ -41,7 +42,8 @@ public class GameFrame {
                      int shieldCharges, int shieldCap,
                      int dangerLevel, int dangerLimit,
                      String statusMessage,
-                     String[] upgradeMenuLines) {
+                     String[] upgradeMenuLines,
+                     int menuSelectedIndex) {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.grid = grid;
@@ -67,6 +69,7 @@ public class GameFrame {
         this.dangerLimit = dangerLimit;
         this.statusMessage = statusMessage;
         this.upgradeMenuLines = upgradeMenuLines;
+        this.menuSelectedIndex = menuSelectedIndex;
     }
 
     public int getBoardWidth() { return boardWidth; }
@@ -94,6 +97,7 @@ public class GameFrame {
     public int getDangerLimit() { return dangerLimit; }
     public String getStatusMessage() { return statusMessage; }
     public String[] getUpgradeMenuLines() { return upgradeMenuLines; }
+    public int getMenuSelectedIndex() { return menuSelectedIndex; }
 
     public boolean isStartScreen() { return state == GameState.START_SCREEN; }
     public boolean isLevelIntro() { return state == GameState.LEVEL_INTRO; }

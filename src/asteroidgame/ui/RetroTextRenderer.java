@@ -68,11 +68,16 @@ public class RetroTextRenderer {
     private String getOverlayText(int row, GameFrame frame) {
         if (frame.isStartScreen()) {
             if (row == 2) return "ARCADE MODE: 6 LEVEL CAMPAIGN";
-            if (row == 4) return "BIG ASTEROIDS ONLY: ◉ → ● → ◎";
-            if (row == 6) return "NO TINY TARGETS - WIDE HITBOXES";
-            if (row == 8) return "SHOOT, SURVIVE, CLEAR, UPGRADE";
-            if (row == 10) return "MISSED ASTEROIDS RAISE DANGER";
-            if (row == 13) return "PRESS ENTER TO START";
+            
+            int sel = frame.getMenuSelectedIndex();
+            
+            // Draw the cursor pointing to the active selection
+            if (row == 6) return sel == 0 ? "► PLAY GAME ◄" : "  PLAY GAME  ";
+            if (row == 8) return sel == 1 ? "► HIGH SCORES ◄" : "  HIGH SCORES  ";
+            if (row == 10) return sel == 2 ? "► QUIT ◄" : "  QUIT  ";
+
+            if (row == 14) return "W/S OR UP/DOWN TO MOVE";
+            if (row == 15) return "PRESS ENTER TO SELECT";
         }
 
         if (frame.isLevelIntro()) {

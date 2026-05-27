@@ -44,6 +44,7 @@ public class GameEngine {
     private String statusMessage;
     private GameState state;
     private boolean quitRequested;
+    private int menuSelectedIndex;
 
     public GameEngine() {
         board = new GameBoard(BOARD_WIDTH, BOARD_HEIGHT);
@@ -66,8 +67,27 @@ public class GameEngine {
         }
 
         if (state == GameState.START_SCREEN) {
+            // Move cursor up
+            if (input.isUpRequested()) {
+                menuSelectedIndex--;
+                if (menuSelectedIndex < 0) menuSelectedIndex = 2; // Loop to bottom
+            }
+            
+            // Move cursor down
+            if (input.isDownRequested()) {
+                menuSelectedIndex++;
+                if (menuSelectedIndex > 2) menuSelectedIndex = 0; // Loop to top
+            }
+
+            // Execute selection
             if (input.isStartRequested() || input.isShootRequested()) {
-                resetAndShowLevelIntro();
+                if (menuSelectedIndex == 0) {
+                    resetAndShowLevelIntro();
+                } else if (menuSelectedIndex == 1) {
+                    setStatusMessage("HIGH SCORES COMING SOON!");
+                } else if (menuSelectedIndex == 2) {
+                    quitRequested = true;
+                }
             }
             return;
         }
@@ -171,6 +191,7 @@ public class GameEngine {
         resetFieldData();
         state = GameState.START_SCREEN;
         quitRequested = false;
+        menuSelectedIndex = 0; // Starts cursor on "PLAY"
         setStatusMessage("READY");
     }
 
@@ -443,7 +464,8 @@ public class GameEngine {
                 dangerLevel,
                 GameConfig.DANGER_LIMIT,
                 statusMessage,
-                upgradeManager.buildUpgradeMenu(player)
+                upgradeManager.buildUpgradeMenu(player),
+                menuSelectedIndex
         );
     }
 

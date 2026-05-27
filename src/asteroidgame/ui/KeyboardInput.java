@@ -12,6 +12,8 @@ import java.awt.event.KeyEvent;
 public class KeyboardInput extends KeyAdapter {
     private boolean leftPressed;
     private boolean rightPressed;
+    private boolean upRequested;
+    private boolean downRequested;
     private boolean shootRequested;
     private boolean startRequested;
     private boolean pauseRequested;
@@ -23,68 +25,37 @@ public class KeyboardInput extends KeyAdapter {
     public void keyPressed(KeyEvent event) {
         int key = event.getKeyCode();
 
-        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
-            leftPressed = true;
-        }
+        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) leftPressed = true;
+        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) rightPressed = true;
+        
+        if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) upRequested = true;
+        if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) downRequested = true;
 
-        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
-            rightPressed = true;
-        }
+        if (key == KeyEvent.VK_SPACE) shootRequested = true;
+        if (key == KeyEvent.VK_ENTER) startRequested = true;
+        if (key == KeyEvent.VK_P) pauseRequested = true;
+        if (key == KeyEvent.VK_R) restartRequested = true;
+        if (key == KeyEvent.VK_Q) quitRequested = true;
 
-        if (key == KeyEvent.VK_SPACE) {
-            shootRequested = true;
-        }
-
-        if (key == KeyEvent.VK_ENTER) {
-            startRequested = true;
-        }
-
-        if (key == KeyEvent.VK_P) {
-            pauseRequested = true;
-        }
-
-        if (key == KeyEvent.VK_R) {
-            restartRequested = true;
-        }
-
-        if (key == KeyEvent.VK_Q) {
-            quitRequested = true;
-        }
-
-        if (key == KeyEvent.VK_1) {
-            upgradeChoice = 1;
-        }
-
-        if (key == KeyEvent.VK_2) {
-            upgradeChoice = 2;
-        }
-
-        if (key == KeyEvent.VK_3) {
-            upgradeChoice = 3;
-        }
-
-        if (key == KeyEvent.VK_4) {
-            upgradeChoice = 4;
-        }
+        if (key == KeyEvent.VK_1) upgradeChoice = 1;
+        if (key == KeyEvent.VK_2) upgradeChoice = 2;
+        if (key == KeyEvent.VK_3) upgradeChoice = 3;
+        if (key == KeyEvent.VK_4) upgradeChoice = 4;
     }
 
     @Override
     public void keyReleased(KeyEvent event) {
         int key = event.getKeyCode();
-
-        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
-            leftPressed = false;
-        }
-
-        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
-            rightPressed = false;
-        }
+        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) leftPressed = false;
+        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) rightPressed = false;
     }
 
     public InputState collectInputState() {
         return new InputState(
                 leftPressed,
                 rightPressed,
+                consumeUpRequest(),
+                consumeDownRequest(),
                 consumeShootRequest(),
                 consumeStartRequest(),
                 consumePauseRequest(),
@@ -94,36 +65,28 @@ public class KeyboardInput extends KeyAdapter {
         );
     }
 
+    private boolean consumeUpRequest() {
+        if (upRequested) { upRequested = false; return true; } return false;
+    }
+
+    private boolean consumeDownRequest() {
+        if (downRequested) { downRequested = false; return true; } return false;
+    }
+
     private boolean consumeShootRequest() {
-        if (shootRequested) {
-            shootRequested = false;
-            return true;
-        }
-        return false;
+        if (shootRequested) { shootRequested = false; return true; } return false;
     }
 
     private boolean consumeStartRequest() {
-        if (startRequested) {
-            startRequested = false;
-            return true;
-        }
-        return false;
+        if (startRequested) { startRequested = false; return true; } return false;
     }
 
     private boolean consumePauseRequest() {
-        if (pauseRequested) {
-            pauseRequested = false;
-            return true;
-        }
-        return false;
+        if (pauseRequested) { pauseRequested = false; return true; } return false;
     }
 
     private boolean consumeRestartRequest() {
-        if (restartRequested) {
-            restartRequested = false;
-            return true;
-        }
-        return false;
+        if (restartRequested) { restartRequested = false; return true; } return false;
     }
 
     private int consumeUpgradeChoice() {
