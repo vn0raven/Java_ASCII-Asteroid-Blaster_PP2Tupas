@@ -3,6 +3,7 @@ package asteroidgame.managers;
 import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
 import asteroidgame.objects.Player;
+import asteroidgame.objects.Explosion;
 import asteroidgame.objects.PowerUp;
 
 import java.util.List;
@@ -12,20 +13,16 @@ import java.util.List;
  */
 public class CollisionManager {
 
-    public CollisionResult checkBulletAsteroidCollisions(List<Bullet> bullets, List<Asteroid> asteroids) {
+    public CollisionResult checkBulletAsteroidCollisions(List<Bullet> bullets, List<Asteroid> asteroids, List<Explosion> explosions) {
         int earnedPoints = 0;
         int destroyedCount = 0;
         int damagedCount = 0;
 
         for (Bullet bullet : bullets) {
-            if (!bullet.isActive()) {
-                continue;
-            }
+            if (!bullet.isActive()) continue;
 
             for (Asteroid asteroid : asteroids) {
-                if (!asteroid.isActive()) {
-                    continue;
-                }
+                if (!asteroid.isActive()) continue;
 
                 if (asteroid.isHitBy(bullet.getX(), bullet.getY())) {
                     bullet.setActive(false);
@@ -36,6 +33,9 @@ public class CollisionManager {
                     if (destroyed) {
                         earnedPoints += asteroid.getDestroyScoreValue();
                         destroyedCount++;
+                        
+                        explosions.add(new Explosion(asteroid.getX(), asteroid.getY())); 
+                        
                     } else {
                         earnedPoints += hitScore;
                         damagedCount++;

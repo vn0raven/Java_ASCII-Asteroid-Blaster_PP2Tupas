@@ -149,7 +149,6 @@ public class RetroTextRenderer {
         if (symbol != ' ') {
             return symbol;
         }
-
         // Stable star field. It does not animate, so the screen no longer feels like it is shifting.
         int pattern = (row * 19 + col * 13) % 131;
 

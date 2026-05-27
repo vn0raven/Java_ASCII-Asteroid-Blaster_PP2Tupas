@@ -1,12 +1,15 @@
 package asteroidgame.core;
 
+import asteroidgame.managers.AsteroidSpawner;
 import asteroidgame.managers.CollisionManager;
 import asteroidgame.managers.CollisionResult;
 import asteroidgame.managers.HighScoreManager;
+import asteroidgame.managers.PowerUpSpawner;
 import asteroidgame.managers.ScoreManager;
 import asteroidgame.managers.UpgradeManager;
 import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
+import asteroidgame.objects.Explosion;
 import asteroidgame.objects.ExtraLifePowerUp;
 import asteroidgame.objects.HeavyAsteroid;
 import asteroidgame.objects.NormalAsteroid;
@@ -31,11 +34,14 @@ public class GameEngine {
     private List<Bullet> bullets;
     private List<Asteroid> asteroids;
     private List<PowerUp> powerUps;
+    private List<Explosion> explosions;
     private CollisionManager collisionManager;
     private ScoreManager scoreManager;
     private UpgradeManager upgradeManager;
     private Random random;
     private HighScoreManager highScoreManager;
+    private AsteroidSpawner asteroidSpawner; 
+    private PowerUpSpawner powerUpSpawner;
 
     private int frameCount;
     private int asteroidsDestroyed;
@@ -53,13 +59,16 @@ public class GameEngine {
         board = new GameBoard(BOARD_WIDTH, BOARD_HEIGHT);
         bullets = new ArrayList<Bullet>();
         asteroids = new ArrayList<Asteroid>();
-        powerUps = new ArrayList<PowerUp>();
+        powerUps = new ArrayList<PowerUp>();  
+        explosions = new ArrayList<Explosion>();   
         collisionManager = new CollisionManager();
         scoreManager = new ScoreManager();
         upgradeManager = new UpgradeManager();
-        random = new Random();
-        resetToStartScreen();
         highScoreManager = new HighScoreManager();
+        asteroidSpawner = new AsteroidSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
+        powerUpSpawner = new PowerUpSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
+        random = new Random();   
+        resetToStartScreen(); 
     }
 
     public void update(InputState input) {
@@ -190,8 +199,17 @@ public class GameEngine {
         }
 
         handlePlayerInput(input);
-        spawnAsteroids();
-        spawnPowerUps();
+
+        Asteroid newAsteroid = asteroidSpawner.attemptSpawn(frameCount, scoreManager.getLevel(), asteroids.size());
+        if (newAsteroid != null) {
+            asteroids.add(newAsteroid);
+        }
+
+        PowerUp newPowerUp = powerUpSpawner.attemptSpawn(frameCount, scoreManager.getLevel());
+        if (newPowerUp != null) {
+            powerUps.add(newPowerUp);
+        }
+
         updateObjects();
         checkCollisions();
         removeInactiveObjects();
@@ -237,6 +255,7 @@ public class GameEngine {
         asteroids.clear();
         powerUps.clear();
         scoreManager.reset();
+        explosions.clear();
 
         int startX = BOARD_WIDTH / 2;
         int startY = BOARD_HEIGHT - 1;
@@ -255,6 +274,7 @@ public class GameEngine {
         bullets.clear();
         asteroids.clear();
         powerUps.clear();
+        explosions.clear();
         dangerLevel = 0;
     }
 
@@ -273,51 +293,6 @@ public class GameEngine {
         }
     }
 
-    private void spawnAsteroids() {
-        int level = scoreManager.getLevel();
-        int spawnInterval = Math.max(20, 44 - level * 3);
-
-        if (asteroids.size() >= GameConfig.MAX_ASTEROIDS_ON_SCREEN) {
-            return;
-        }
-
-        if (frameCount % spawnInterval == 0) {
-            asteroids.add(createRandomAsteroid(level));
-        }
-
-        if (level >= 5 && frameCount % (spawnInterval * 2) == 0
-                && asteroids.size() < GameConfig.MAX_ASTEROIDS_ON_SCREEN) {
-            asteroids.add(createRandomAsteroid(level));
-        }
-    }
-
-    private Asteroid createRandomAsteroid(int level) {
-        int x = chooseSpawnX();
-        int roll = random.nextInt(100);
-
-        int normalSpeed = Math.max(GameConfig.MIN_ASTEROID_SPEED, 9 - level / 2);
-        int heavySpeed = Math.max(GameConfig.MIN_HEAVY_ASTEROID_SPEED, 10 - level / 2);
-
-        // No tiny asteroid spawns. The game only creates big, readable targets.
-        if (level >= 3 && roll < 35 + level * 5) {
-            return new HeavyAsteroid(x, 0, BOARD_HEIGHT, heavySpeed);
-        }
-
-        return new NormalAsteroid(x, 0, BOARD_HEIGHT, normalSpeed);
-    }
-
-    private int chooseSpawnX() {
-        for (int attempt = 0; attempt < 15; attempt++) {
-            int x = 1 + random.nextInt(BOARD_WIDTH - 2);
-
-            if (isSpawnPositionClear(x)) {
-                return x;
-            }
-        }
-
-        return 1 + random.nextInt(BOARD_WIDTH - 2);
-    }
-
     private boolean isSpawnPositionClear(int x) {
         for (Asteroid asteroid : asteroids) {
             if (asteroid.isActive() && asteroid.getY() <= 2
@@ -327,19 +302,6 @@ public class GameEngine {
         }
 
         return true;
-    }
-
-    private void spawnPowerUps() {
-        int powerUpInterval = Math.max(160, 260 - scoreManager.getLevel() * 10);
-
-        if (frameCount > 0 && frameCount % powerUpInterval == 0) {
-            int chance = random.nextInt(100);
-
-            if (chance < 40) {
-                int x = random.nextInt(BOARD_WIDTH);
-                powerUps.add(new ExtraLifePowerUp(x, 0, BOARD_HEIGHT));
-            }
-        }
     }
 
     private void updateObjects() {
@@ -356,10 +318,14 @@ public class GameEngine {
         for (PowerUp powerUp : powerUps) {
             powerUp.update();
         }
+
+        for (Explosion explosion : explosions) {
+            explosion.update();
+        }
     }
 
     private void checkCollisions() {
-        CollisionResult result = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids);
+        CollisionResult result = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids, explosions);
         scoreManager.addPoints(result.getEarnedPoints());
         asteroidsDestroyed += result.getDestroyedCount();
 
@@ -409,6 +375,14 @@ public class GameEngine {
             }
         }
 
+        Iterator<Explosion> explosionIterator = explosions.iterator();
+        while (explosionIterator.hasNext()) {
+            Explosion explosion = explosionIterator.next();
+            if (!explosion.isActive()) {
+                explosionIterator.remove();
+            }
+        }
+
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
         while (powerUpIterator.hasNext()) {
             PowerUp powerUp = powerUpIterator.next();
@@ -453,6 +427,10 @@ public class GameEngine {
                 || state == GameState.LEVEL_UP || state == GameState.GAME_OVER) {
             for (PowerUp powerUp : powerUps) {
                 powerUp.draw(board);
+            }
+
+            for (Explosion explosion : explosions) {
+                explosion.draw(board);
             }
 
             for (Asteroid asteroid : asteroids) {
