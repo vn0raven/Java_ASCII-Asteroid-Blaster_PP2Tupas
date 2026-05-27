@@ -55,6 +55,10 @@ public class GameEngine {
     private GameState state;
     private boolean quitRequested;
     private int menuSelectedIndex;
+
+    private String targetStatusMessage = ""; 
+    private int typewriterIndex = 0;
+    private int typewriterTimer = 0;
     
 
     public GameEngine() {
@@ -414,17 +418,38 @@ public class GameEngine {
     }
 
     private void setStatusMessage(String message) {
-        statusMessage = message;
+        targetStatusMessage = message;
+        statusMessage = ""; 
+        
+        typewriterIndex = 0;
+        typewriterTimer = 0;
         messageCounter = GameConfig.MESSAGE_DURATION;
     }
 
     private void updateStatusTimer() {
-        if (messageCounter > 0) {
-            messageCounter--;
-        }
-
-        if (messageCounter == 0) {
-            statusMessage = "";
+        if (targetStatusMessage != null && !targetStatusMessage.isEmpty()) {
+            
+            if (typewriterIndex < targetStatusMessage.length()) {
+                typewriterTimer++;
+                
+                if (typewriterTimer >= 2) { 
+                    statusMessage += targetStatusMessage.charAt(typewriterIndex);
+                    typewriterIndex++;
+                    typewriterTimer = 0;
+                    
+                    if (statusMessage.charAt(statusMessage.length() - 1) != ' ') {
+                        
+                    }
+                }
+            } 
+            else {
+                if (messageCounter > 0) {
+                    messageCounter--;
+                } else {
+                    statusMessage = "";
+                    targetStatusMessage = "";
+                }
+            }
         }
     }
 
