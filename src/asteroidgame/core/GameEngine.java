@@ -11,9 +11,6 @@ import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
 import asteroidgame.objects.Drawable;
 import asteroidgame.objects.Explosion;
-import asteroidgame.objects.ExtraLifePowerUp;
-import asteroidgame.objects.HeavyAsteroid;
-import asteroidgame.objects.NormalAsteroid;
 import asteroidgame.objects.Player;
 import asteroidgame.objects.PowerUp;
 import asteroidgame.objects.Updatable;
@@ -438,7 +435,7 @@ public class GameEngine {
                     typewriterTimer = 0;
                     
                     if (statusMessage.charAt(statusMessage.length() - 1) != ' ') {
-                        
+
                     }
                 }
             } 
