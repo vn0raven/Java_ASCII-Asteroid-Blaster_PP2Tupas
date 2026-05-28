@@ -1,0 +1,236 @@
+@startuml
+title <b>ASCII Asteroid Blaster - System Architecture</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 10
+skinparam defaultFontName Arial
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+
+left to right direction
+
+rectangle "<b>Application Layer</b>\n\nMain" as APP
+rectangle "<b>User Interface Layer</b>\n\nSwingGameWindow\nKeyboardInput\nRetroTextRenderer\nFixedGridPanel" as UI
+rectangle "<b>Core Game Layer</b>\n\nGameEngine\nGameBoard\nGameFrame" as CORE
+rectangle "<b>State Layer</b>\n\nGameState\nInputState" as STATE
+rectangle "<b>System Layer</b>\n\nCollision\nScoring\nUpgrades\nSpawning\nHigh Score" as SYSTEMS
+rectangle "<b>Object Layer</b>\n\nPlayer\nBullets\nAsteroids\nMeteor Shards\nUFOs\nPower-ups\nEffects" as OBJECTS
+rectangle "<b>Support Layer</b>\n\nGameConfig\nGameColors\nSoundManager" as SUPPORT
+
+APP --> UI
+UI --> CORE
+
+CORE --> STATE
+CORE --> SYSTEMS
+CORE --> OBJECTS
+CORE --> SUPPORT
+
+SYSTEMS --> OBJECTS
+
+legend right
+<b>Layer Purpose</b>
+App = program entry point
+UI = input and display
+Core = main game controller
+Objects = playable entities
+Systems = managers and logic
+Support = settings, colors, audio
+endlegend
+
+@enduml
+@startuml
+title <b>ASCII Asteroid Blaster - OOP Class Hierarchy</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide empty members
+
+top to bottom direction
+
+interface Updatable {
+  + update()
+}
+
+interface Drawable {
+  + draw(GameBoard)
+}
+
+abstract class GameObject {
+  - int x
+  - int y
+  - char symbol
+  - boolean active
+  + update()
+  + draw(GameBoard)
+  + getX()
+  + getY()
+  + isActive()
+}
+
+class Player {
+  - int lives
+  - int maxLives
+  - int facingDx
+  - int facingDy
+  + move(int dx, int dy)
+  + shoot()
+  + loseLife()
+  + isAlive()
+}
+
+class Bullet {
+  - int dx
+  - int dy
+  - int speed
+  + update()
+}
+
+class EnemyBullet {
+  - int dx
+  - int dy
+  + update()
+}
+
+abstract class Asteroid {
+  - int health
+  - int dx
+  - int dy
+  - String[] sprite
+  + update()
+  + takeDamage()
+  + containsPoint(int x, int y)
+}
+
+class HeavyAsteroid
+class NormalAsteroid
+class SmallAsteroid
+class MeteorShard
+
+class UfoEnemy {
+  - int health
+  - int shootCooldown
+  + update()
+  + shootAt(Player)
+}
+
+abstract class PowerUp {
+  + applyEffect(Player)
+}
+
+class ExtraLifePowerUp
+
+class Explosion {
+  + update()
+  + draw(GameBoard)
+}
+
+Updatable <|.. GameObject
+Drawable <|.. GameObject
+
+GameObject <|-- Player
+GameObject <|-- Bullet
+GameObject <|-- EnemyBullet
+GameObject <|-- Asteroid
+GameObject <|-- MeteorShard
+GameObject <|-- UfoEnemy
+GameObject <|-- PowerUp
+
+Asteroid <|-- HeavyAsteroid
+Asteroid <|-- NormalAsteroid
+Asteroid <|-- SmallAsteroid
+
+PowerUp <|-- ExtraLifePowerUp
+
+Updatable <|.. Explosion
+Drawable <|.. Explosion
+
+Player --> Bullet : creates
+UfoEnemy --> EnemyBullet : creates
+PowerUp --> Player : affects
+
+@enduml
+@startuml
+title <b>ASCII Asteroid Blaster - Code Package Overview</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam defaultTextAlignment left
+skinparam linetype ortho
+
+top to bottom direction
+
+rectangle "<b>asteroidgame.app</b>\n----------------------\nMain" as APP
+
+rectangle "<b>asteroidgame.ui</b>\n----------------------\ninput/KeyboardInput\nrender/RetroTextRenderer\nrender/FixedGridPanel\nswing/SwingLauncher\nswing/SwingGameWindow" as UI
+
+rectangle "<b>asteroidgame.core</b>\n----------------------\nGameEngine\nGameBoard\nGameFrame" as CORE
+
+rectangle "<b>asteroidgame.state</b>\n----------------------\nGameState\nInputState" as STATE
+
+rectangle "<b>asteroidgame.systems</b>\n----------------------\ncollision/CollisionManager\ncollision/CollisionResult\nscoring/ScoreManager\nscoring/HighScoreManager\nupgrades/UpgradeManager\nspawning/AsteroidSpawner\nspawning/MeteorClusterSpawner\nspawning/UfoSpawner\nspawning/PowerUpSpawner\nspawning/ShrapnelFactory" as SYSTEMS
+
+rectangle "<b>asteroidgame.objects</b>\n----------------------\nbase/GameObject\nbase/Updatable / Drawable\nplayer/Player\nprojectiles/Bullet / EnemyBullet\nasteroids/Asteroid / HeavyAsteroid / NormalAsteroid / SmallAsteroid\nasteroids/MeteorShard / AsteroidSprites\nenemies/UfoEnemy\npowerups/PowerUp / ExtraLifePowerUp\neffects/Explosion\nassets/GameSymbols" as OBJECTS
+
+rectangle "<b>asteroidgame.config</b>\n----------------------\nGameConfig\nGameColors" as CONFIG
+
+rectangle "<b>asteroidgame.audio</b>\n----------------------\nSoundManager" as AUDIO
+
+APP --> UI
+UI --> CORE
+
+CORE --> STATE
+CORE --> SYSTEMS
+CORE --> OBJECTS
+CORE --> CONFIG
+CORE --> AUDIO
+
+SYSTEMS --> OBJECTS
+
+@enduml
+@startuml
+title <b>ASCII Asteroid Blaster - Gameplay Flow</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam linetype ortho
+skinparam activity {
+  BorderColor black
+  FontColor black
+}
+
+start
+
+:Player presses movement or shoot keys;
+:KeyboardInput records input;
+:GameEngine reads InputState;
+:GameEngine checks current GameState;
+
+if (<b>Game is playing?</b>) then (Yes)
+
+  :Move player and update facing direction;
+  :Update bullets, asteroids, UFOs,\nshards, and effects;
+  :Spawn asteroids, meteor clusters,\nUFOs, and power-ups;
+  :CollisionManager checks collisions;
+  :Update score, lives, upgrades,\nand danger meter;
+  :SoundManager plays music and effects;
+  :Build GameFrame;
+  :RetroTextRenderer prepares visual output;
+  :FixedGridPanel displays the screen;
+
+else (No)
+
+  :Show start, pause, upgrade,\ngame over, or victory screen;
+
+endif
+
+stop
+
+@enduml

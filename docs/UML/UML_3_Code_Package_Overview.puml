@@ -1,0 +1,40 @@
+@startuml
+title <b>ASCII Asteroid Blaster - Code Package Overview</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam defaultTextAlignment left
+skinparam linetype ortho
+
+top to bottom direction
+
+rectangle "<b>asteroidgame.app</b>\n----------------------\nMain" as APP
+
+rectangle "<b>asteroidgame.ui</b>\n----------------------\ninput/KeyboardInput\nrender/RetroTextRenderer\nrender/FixedGridPanel\nswing/SwingLauncher\nswing/SwingGameWindow" as UI
+
+rectangle "<b>asteroidgame.core</b>\n----------------------\nGameEngine\nGameBoard\nGameFrame" as CORE
+
+rectangle "<b>asteroidgame.state</b>\n----------------------\nGameState\nInputState" as STATE
+
+rectangle "<b>asteroidgame.systems</b>\n----------------------\ncollision/CollisionManager\ncollision/CollisionResult\nscoring/ScoreManager\nscoring/HighScoreManager\nupgrades/UpgradeManager\nspawning/AsteroidSpawner\nspawning/MeteorClusterSpawner\nspawning/UfoSpawner\nspawning/PowerUpSpawner\nspawning/ShrapnelFactory" as SYSTEMS
+
+rectangle "<b>asteroidgame.objects</b>\n----------------------\nbase/GameObject\nbase/Updatable / Drawable\nplayer/Player\nprojectiles/Bullet / EnemyBullet\nasteroids/Asteroid / HeavyAsteroid / NormalAsteroid / SmallAsteroid\nasteroids/MeteorShard / AsteroidSprites\nenemies/UfoEnemy\npowerups/PowerUp / ExtraLifePowerUp\neffects/Explosion\nassets/GameSymbols" as OBJECTS
+
+rectangle "<b>asteroidgame.config</b>\n----------------------\nGameConfig\nGameColors" as CONFIG
+
+rectangle "<b>asteroidgame.audio</b>\n----------------------\nSoundManager" as AUDIO
+
+APP --> UI
+UI --> CORE
+
+CORE --> STATE
+CORE --> SYSTEMS
+CORE --> OBJECTS
+CORE --> CONFIG
+CORE --> AUDIO
+
+SYSTEMS --> OBJECTS
+
+@enduml

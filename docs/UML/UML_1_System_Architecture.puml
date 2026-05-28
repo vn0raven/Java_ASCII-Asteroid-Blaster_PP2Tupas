@@ -1,0 +1,41 @@
+@startuml
+title <b>ASCII Asteroid Blaster - System Architecture</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 10
+skinparam defaultFontName Arial
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+
+left to right direction
+
+rectangle "<b>Application Layer</b>\n\nMain" as APP
+rectangle "<b>User Interface Layer</b>\n\nSwingGameWindow\nKeyboardInput\nRetroTextRenderer\nFixedGridPanel" as UI
+rectangle "<b>Core Game Layer</b>\n\nGameEngine\nGameBoard\nGameFrame" as CORE
+rectangle "<b>State Layer</b>\n\nGameState\nInputState" as STATE
+rectangle "<b>System Layer</b>\n\nCollision\nScoring\nUpgrades\nSpawning\nHigh Score" as SYSTEMS
+rectangle "<b>Object Layer</b>\n\nPlayer\nBullets\nAsteroids\nMeteor Shards\nUFOs\nPower-ups\nEffects" as OBJECTS
+rectangle "<b>Support Layer</b>\n\nGameConfig\nGameColors\nSoundManager" as SUPPORT
+
+APP --> UI
+UI --> CORE
+
+CORE --> STATE
+CORE --> SYSTEMS
+CORE --> OBJECTS
+CORE --> SUPPORT
+
+SYSTEMS --> OBJECTS
+
+legend right
+<b>Layer Purpose</b>
+App = program entry point
+UI = input and display
+Core = main game controller
+Objects = playable entities
+Systems = managers and logic
+Support = settings, colors, audio
+endlegend
+
+@enduml
