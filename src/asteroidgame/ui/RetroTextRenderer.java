@@ -66,73 +66,76 @@ public class RetroTextRenderer {
     }
 
     private String getOverlayText(int row, GameFrame frame) {
+        // The board is 40 rows tall. Shifting all UI elements down to 
+        // roughly rows 12-26 vertically centers them perfectly.
+        
         if (frame.isStartScreen()) {
-            if (row == 2) return "ARENA MODE: 6 LEVEL CAMPAIGN";
+            if (row == 12) return "ARENA MODE: 6 LEVEL CAMPAIGN";
             
             int sel = frame.getMenuSelectedIndex();
             
-            // Draw the cursor pointing to the active selection
-            if (row == 6) return sel == 0 ? "► PLAY GAME ◄" : "  PLAY GAME  ";
-            if (row == 8) return sel == 1 ? "► HIGH SCORES ◄" : "  HIGH SCORES  ";
-            if (row == 10) return sel == 2 ? "► QUIT ◄" : "  QUIT  ";
+            // Padded to exactly 17 characters wide so the arrows align cleanly
+            if (row == 16) return sel == 0 ? "►   PLAY GAME   ◄" : "    PLAY GAME    ";
+            if (row == 18) return sel == 1 ? "►  HIGH SCORES  ◄" : "   HIGH SCORES   ";
+            if (row == 20) return sel == 2 ? "►     QUIT      ◄" : "      QUIT       ";
 
-            if (row == 14) return "W/S OR UP/DOWN TO MOVE";
-            if (row == 15) return "PRESS ENTER TO SELECT";
+            if (row == 25) return "W/S OR UP/DOWN TO MOVE";
+            if (row == 26) return "PRESS ENTER TO SELECT";
         }
 
         if (frame.isLevelIntro()) {
-            if (row == 4) return "LEVEL " + frame.getLevel() + " / " + frame.getMaxLevel();
-            if (row == 6) return frame.getLevelName();
-            if (row == 8) return levelTip(frame.getLevel());
-            if (row == 11) return "TARGET SCORE: " + frame.getNextLevelScore();
-            if (row == 14) return "PRESS ENTER TO LAUNCH";
+            if (row == 14) return "LEVEL " + frame.getLevel() + " / " + frame.getMaxLevel();
+            if (row == 16) return frame.getLevelName();
+            if (row == 18) return levelTip(frame.getLevel());
+            if (row == 21) return "TARGET SCORE: " + frame.getNextLevelScore();
+            if (row == 25) return "PRESS ENTER TO LAUNCH";
         }
 
         if (frame.isPaused()) {
-            if (row == 7) return "▣ PAUSED ▣";
-            if (row == 9) return "PRESS P TO RESUME";
+            if (row == 18) return "▣ PAUSED ▣";
+            if (row == 20) return "PRESS P TO RESUME";
         }
 
         if (frame.isLevelUp()) {
             String[] menu = frame.getUpgradeMenuLines();
-            if (row == 1) return "✹ LEVEL " + (frame.getLevel() + 1) + " UNLOCKED ✹";
-            if (row == 3) return "CHOOSE ONE SHIP UPGRADE";
-            if (row == 5) return menu[0];
-            if (row == 7) return menu[1];
-            if (row == 9) return menu[2];
-            if (row == 11) return menu[3];
-            if (row == 14) return "PRESS 1, 2, 3, OR 4";
-            if (row == 16) return "MAXED OPTIONS SHOW A WARNING";
+            if (row == 10) return "✹ LEVEL " + (frame.getLevel() + 1) + " UNLOCKED ✹";
+            if (row == 12) return "CHOOSE ONE SHIP UPGRADE";
+            if (row == 15) return menu[0];
+            if (row == 17) return menu[1];
+            if (row == 19) return menu[2];
+            if (row == 21) return menu[3];
+            if (row == 25) return "PRESS 1, 2, 3, OR 4";
+            if (row == 26) return "MAXED OPTIONS SHOW A WARNING";
         }
 
         if (frame.isVictory()) {
-            if (row == 2) return "✹ MISSION COMPLETE ✹";
-            if (row == 4) return "YOU CLEARED ALL 6 LEVELS";
-            if (row == 6) return "FINAL SCORE: " + frame.getScore();
-            if (row == 8) return "ASTEROIDS DESTROYED: " + frame.getAsteroidsDestroyed();
-            if (row == 10) return "UFOS DESTROYED: " + frame.getUfosDestroyed();
-            if (row == 12) return "POWER-UPS COLLECTED: " + frame.getPowerUpsCollected();
-            if (row == 14) return "FINAL BUILD FIRE " + frame.getFireRateLevel() + "  SHOT " + frame.getShotLevel() + "  SHIELD " + frame.getShieldCharges();
-            if (row == 15) return "PRESS R TO RESTART";
+            if (row == 10) return "✹ MISSION COMPLETE ✹";
+            if (row == 12) return "YOU CLEARED ALL 6 LEVELS";
+            if (row == 15) return "FINAL SCORE: " + frame.getScore();
+            if (row == 17) return "ASTEROIDS DESTROYED: " + frame.getAsteroidsDestroyed();
+            if (row == 19) return "UFOS DESTROYED: " + frame.getUfosDestroyed();
+            if (row == 21) return "POWER-UPS COLLECTED: " + frame.getPowerUpsCollected();
+            if (row == 24) return "FINAL BUILD FIRE " + frame.getFireRateLevel() + "  SHOT " + frame.getShotLevel() + "  SHIELD " + frame.getShieldCharges();
+            if (row == 26) return "PRESS R TO RESTART";
         }
 
         if (frame.isGameOver()) {
-            if (row == 3) return "✹ GAME OVER ✹";
-            if (row == 5) return "FINAL SCORE: " + frame.getScore();
-            if (row == 7) return "LEVEL REACHED: " + frame.getLevel() + " / " + frame.getMaxLevel();
-            if (row == 9) return "ASTEROIDS DESTROYED: " + frame.getAsteroidsDestroyed();
-            if (row == 11) return "UFOS DESTROYED: " + frame.getUfosDestroyed();
-            if (row == 13) return "POWER-UPS COLLECTED: " + frame.getPowerUpsCollected();
-            if (row == 15) return "DANGER REACHED: " + frame.getDangerLevel() + " / " + frame.getDangerLimit();
-            if (row == 17) return "PRESS R TO RESTART";
+            if (row == 10) return "✹ GAME OVER ✹";
+            if (row == 12) return "FINAL SCORE: " + frame.getScore();
+            if (row == 14) return "LEVEL REACHED: " + frame.getLevel() + " / " + frame.getMaxLevel();
+            if (row == 16) return "ASTEROIDS DESTROYED: " + frame.getAsteroidsDestroyed();
+            if (row == 18) return "UFOS DESTROYED: " + frame.getUfosDestroyed();
+            if (row == 20) return "POWER-UPS COLLECTED: " + frame.getPowerUpsCollected();
+            if (row == 22) return "DANGER REACHED: " + frame.getDangerLevel() + " / " + frame.getDangerLimit();
+            if (row == 26) return "PRESS R TO RESTART";
         }
 
         if (frame.isHighScoreScreen()) {
-            if (row == 2) return "✦ LOCAL LEADERBOARD ✦";    
-            if (row == 6) return "1. JACA    " + padLeft(String.valueOf(frame.getHighScore()), 6, '0');
-            if (row == 8) return "2. CPU     001000";
-            if (row == 10) return "3. CPU     000500";     
-            if (row == 15) return "PRESS ENTER OR M TO RETURN";
+            if (row == 12) return "✦ LOCAL LEADERBOARD ✦";    
+            if (row == 16) return "1. JACA    " + padLeft(String.valueOf(frame.getHighScore()), 6, '0');
+            if (row == 18) return "2. CPU     001000";
+            if (row == 20) return "3. CPU     000500";     
+            if (row == 25) return "PRESS ENTER OR M TO RETURN";
         }
 
         return null;

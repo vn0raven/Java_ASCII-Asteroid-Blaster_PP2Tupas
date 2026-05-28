@@ -10,11 +10,12 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.util.Random;
 
 /**
  * Draws the retro text screen on a fixed cell grid.
- * Now features a CRT Monitor Filter and a 3D Parallax Starfield!
+ * Fixes text spacing and solidifies borders without changing the grid dimensions.
  */
 public class FixedGridPanel extends JPanel {
     private String[] lines;
@@ -24,7 +25,8 @@ public class FixedGridPanel extends JPanel {
     private int cellHeight;
     private int baselineOffset;
     private Font gameFont;
-    private static final int FONT_SIZE = 12;
+    
+    // KEEPING YOUR EXACT GRID SIZE
     private static final int FIXED_CELL_WIDTH = 12;
     private static final int FIXED_CELL_HEIGHT = 13;
 
@@ -35,7 +37,6 @@ public class FixedGridPanel extends JPanel {
     // --- LEVEL PALETTE VARIABLE ---
     private int currentLevel = 1;
     private int trackingY = 0;
-    
 
     private class Star {
         float x, y, speed;
@@ -48,13 +49,10 @@ public class FixedGridPanel extends JPanel {
             
             int layer = random.nextInt(100);
             if (layer < 60) {
-                // Layer 1: Deep Background (Lots of them, slow and dark)
                 speed = 0.3f; symbol = '.'; color = new Color(70, 70, 90); 
             } else if (layer < 90) {
-                // Layer 2: Midground (Medium speed and brightness)
                 speed = 1.0f; symbol = '·'; color = new Color(120, 120, 140);
             } else {
-                // Layer 3: Foreground (Few of them, fast and bright)
                 speed = 2.5f; symbol = '|'; color = new Color(180, 180, 210);
             }
         }
@@ -64,15 +62,31 @@ public class FixedGridPanel extends JPanel {
         this.rows = rows;
         this.columns = columns;
         this.lines = new String[rows];
-        this.gameFont = new Font(Font.MONOSPACED, Font.PLAIN, FONT_SIZE);
+        
+        // Base font setup - Bold helps visibility
+        Font baseFont = new Font(Font.MONOSPACED, Font.BOLD, 14);
+        FontMetrics fm = getFontMetrics(baseFont);
+        
+        // DYNAMIC FONT STRETCH:
+        // We stretch the font horizontally so its characters are exactly 12px wide.
+        // This removes the gaps between letters while respecting your fixed grid.
+        int charW = fm.charWidth('W');
+        if (charW > 0 && charW != FIXED_CELL_WIDTH) {
+            float scaleX = (float) FIXED_CELL_WIDTH / charW;
+            this.gameFont = baseFont.deriveFont(AffineTransform.getScaleInstance(scaleX, 1.0));
+        } else {
+            this.gameFont = baseFont;
+        }
 
         setBackground(Color.BLACK);
         setFont(gameFont);
         setFocusable(true);
 
-        FontMetrics metrics = getFontMetrics(gameFont);
         this.cellWidth = FIXED_CELL_WIDTH;
         this.cellHeight = FIXED_CELL_HEIGHT;
+        
+        // Recalculate baseline with the new stretched font
+        FontMetrics metrics = getFontMetrics(this.gameFont);
         this.baselineOffset = metrics.getAscent() + Math.max(0, (cellHeight - metrics.getHeight()) / 2);
 
         int panelWidth = columns * cellWidth;
@@ -80,7 +94,6 @@ public class FixedGridPanel extends JPanel {
         setPreferredSize(new Dimension(panelWidth, panelHeight));
         clearLines();
 
-        // Initialize a larger starfield for the bigger arena
         stars = new Star[130];
         for (int i = 0; i < stars.length; i++) {
             stars[i] = new Star();
@@ -90,7 +103,6 @@ public class FixedGridPanel extends JPanel {
 
     public void setScreenText(String screenText) {
         String[] sourceLines = screenText.split("\\n", -1);
-
         for (int row = 0; row < rows; row++) {
             if (row < sourceLines.length) {
                 lines[row] = fitLine(sourceLines[row]);
@@ -98,7 +110,6 @@ public class FixedGridPanel extends JPanel {
                 lines[row] = repeat(' ', columns);
             }
         }
-
         repaint();
     }
 
@@ -122,13 +133,11 @@ public class FixedGridPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        // 1. Deep space background
         g.setColor(new Color(10, 10, 15)); 
         g.fillRect(0, 0, getWidth(), getHeight());
-
         g.setFont(gameFont);
 
-        // 2. Starfield
+        // Starfield
         for (Star star : stars) {
             star.y += star.speed;
             if (star.y > getHeight()) star.reset(getWidth(), getHeight(), false);
@@ -137,12 +146,10 @@ public class FixedGridPanel extends JPanel {
         }
         
         trackingY += 3; 
-        if (trackingY > getHeight() + 50) {
-            trackingY = -50; 
-        }
+        if (trackingY > getHeight() + 50) trackingY = -50; 
+        
         for (int row = 0; row < rows; row++) {
             if (lines[row] == null) continue;
-            
             String currentLine = lines[row];
 
             for (int col = 0; col < currentLine.length(); col++) {
@@ -150,53 +157,41 @@ public class FixedGridPanel extends JPanel {
                 
                 if (c != ' ') {
                     Color baseColor = getColorForSymbol(c);
-                    int symbolWidth = g.getFontMetrics().charWidth(c);
-                    int drawX = col * cellWidth + Math.max(0, (cellWidth - symbolWidth) / 2);
-                    int drawY = row * cellHeight + baselineOffset;
-
-
-                    // Keep gameplay symbols locked to their grid cells.
-                    // The CRT band still moves, but the asteroid sprites do not jitter.
-
-                    // --- THE THICK NEON HALO ---
-                    Color glowColor = new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), 40); 
-                    g.setColor(glowColor);
                     
-                    // The Cross
-                    g.drawString(String.valueOf(c), drawX - 1, drawY); 
-                    g.drawString(String.valueOf(c), drawX + 1, drawY); 
-                    g.drawString(String.valueOf(c), drawX, drawY - 1); 
-                    g.drawString(String.valueOf(c), drawX, drawY + 1); 
-                    
-                    // The Diagonals
-                    g.drawString(String.valueOf(c), drawX - 1, drawY - 1); 
-                    g.drawString(String.valueOf(c), drawX + 1, drawY - 1); 
-                    g.drawString(String.valueOf(c), drawX - 1, drawY + 1); 
-                    g.drawString(String.valueOf(c), drawX + 1, drawY + 1); 
+                    if (isBorderSymbol(c)) {
+                        // Use the custom renderer to draw 100% solid connected borders
+                        drawSolidBorder(g, c, col, row, baseColor);
+                    } else {
+                        // Standard text and symbols (now perfectly sized to 12px wide)
+                        int symbolWidth = g.getFontMetrics().charWidth(c);
+                        int drawX = col * cellWidth + Math.max(0, (cellWidth - symbolWidth) / 2);
+                        int drawY = row * cellHeight + baselineOffset;
 
-                    // --- THE SOLID CORE ---
-                    g.setColor(baseColor); 
-                    g.drawString(String.valueOf(c), drawX, drawY);
+                        // Neon Halo Glow
+                        Color glowColor = new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), 60); 
+                        g.setColor(glowColor);
+                        g.drawString(String.valueOf(c), drawX - 1, drawY); 
+                        g.drawString(String.valueOf(c), drawX + 1, drawY); 
+                        
+                        // Solid Core
+                        g.setColor(baseColor); 
+                        g.drawString(String.valueOf(c), drawX, drawY);
+                    }
                 }
             }
         }
 
-        // --- DRAW THE PHYSICAL TRACKING BAND ---
-        // A very faint, semi-transparent white band rolling over the whole game
+        // CRT Effects
         g.setColor(new Color(255, 255, 255, 8)); 
         g.fillRect(0, trackingY - 20, getWidth(), 40);
 
-        // 4. CRT MONITOR POST-PROCESSING WITH ELECTRICAL FLICKER
         int flicker = random.nextInt(9) - 4; 
-        
-        // A. Flickering Scanlines
         int scanlineOpacity = Math.max(0, Math.min(255, 85 + flicker)); 
         g.setColor(new Color(0, 0, 0, scanlineOpacity)); 
         for (int y = 0; y < getHeight(); y += 3) {
             g.drawLine(0, y, getWidth(), y);
         }
 
-        // B. Flickering Vignette
         int vignetteOpacity = Math.max(0, Math.min(255, 210 + flicker)); 
         java.awt.geom.Point2D center = new java.awt.geom.Point2D.Float(getWidth() / 2.0f, getHeight() / 2.0f);
         float radius = Math.max(getWidth(), getHeight()) / 1.2f;
@@ -208,57 +203,87 @@ public class FixedGridPanel extends JPanel {
         g2d.fillRect(0, 0, getWidth(), getHeight());
     }
     
+    /**
+     * Manually draws UI borders as pure rectangles to ensure there are NEVER any
+     * dashed gaps between them, regardless of font rendering limitations.
+     */
+    private void drawSolidBorder(Graphics g, char c, int col, int row, Color color) {
+        int x = col * cellWidth;
+        int y = row * cellHeight;
+        int cx = x + cellWidth / 2;
+        int cy = y + cellHeight / 2;
+        int thick = 2; // Pixel thickness of the UI lines
+
+        // Add glow to the borders
+        g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 60));
+        if (c == '═' || c == '─') g.fillRect(x, cy - thick + 1, cellWidth, thick + 2);
+        if (c == '║') g.fillRect(cx - thick + 1, y, thick + 2, cellHeight);
+        
+        // Draw crisp core lines
+        g.setColor(color);
+        
+        // Draw Rightward connection
+        if (c == '═' || c == '─' || c == '╔' || c == '╚' || c == '╠') {
+            g.fillRect(cx, cy - thick/2, cellWidth/2 + 1, thick); 
+        }
+        // Draw Leftward connection
+        if (c == '═' || c == '─' || c == '╗' || c == '╝' || c == '╣') {
+            g.fillRect(x, cy - thick/2, cellWidth/2 + 1, thick); 
+        }
+        // Draw Downward connection
+        if (c == '║' || c == '╠' || c == '╣' || c == '╔' || c == '╗') {
+            g.fillRect(cx - thick/2, cy, thick, cellHeight/2 + 1); 
+        }
+        // Draw Upward connection
+        if (c == '║' || c == '╠' || c == '╣' || c == '╚' || c == '╝') {
+            g.fillRect(cx - thick/2, y, thick, cellHeight/2 + 1); 
+        }
+    }
+
+    private boolean isBorderSymbol(char c) {
+        return c == '╔' || c == '╗' || c == '╚' || c == '╝' || c == '║' || c == '═' || c == '╠' || c == '╣' || c == '─';
+    }
+    
     private Color getColorForSymbol(char symbol) {
-        // 1. UNIVERSAL COLORS 
         if (symbol == '+' || Character.isDigit(symbol)) return new Color(50, 255, 50); 
         if (symbol == GameSymbols.PLAYER_HIT) return new Color(255, 100, 100); 
         if (symbol == GameSymbols.POWER_UP_LIFE || symbol == GameSymbols.LIFE || symbol == GameSymbols.SHIELD) return new Color(255, 235, 100); 
         if (isAsteroidSpriteSymbol(symbol)) return new Color(255, 150, 45);
-        if (symbol == '╔' || symbol == '╗' || symbol == '╚' || symbol == '╝' || symbol == '║' || symbol == '═' || symbol == '╠' || symbol == '╣' || symbol == '─') return new Color(170, 210, 255); 
+        if (isBorderSymbol(symbol)) return new Color(170, 210, 255); 
 
         int palette = (currentLevel - 1) % 4; 
 
         switch (palette) {
-            case 0: // LEVEL 1: Classic Arcade (Blazing Orange & Electric Cyan)
-                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 80, 0); // Pure fire orange
-                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(0, 255, 255); // Pure electric cyan
+            case 0:
+                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 80, 0); 
+                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(0, 255, 255); 
                 if (symbol == GameSymbols.BULLET) return new Color(0, 255, 255);
                 if (symbol == GameSymbols.ASTEROID_WEAK || symbol == GameSymbols.ASTEROID_NORMAL || symbol == GameSymbols.ASTEROID_HEAVY) return new Color(255, 140, 0);
-                
-                // Text: Arcade Yellow
                 return new Color(255, 255, 0); 
                 
-            case 1: // LEVEL 2: Cyberpunk (Highlighter Pink & Neon Yellow)
-                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 0, 255); // Pure Magenta/Pink
-                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 255, 0); // Blinding Yellow
+            case 1:
+                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 0, 255); 
+                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 255, 0); 
                 if (symbol == GameSymbols.BULLET) return new Color(255, 0, 255);
                 if (symbol == GameSymbols.ASTEROID_WEAK || symbol == GameSymbols.ASTEROID_NORMAL || symbol == GameSymbols.ASTEROID_HEAVY) return new Color(200, 0, 255);
-                
-                // Text: Electric Blue
                 return new Color(0, 150, 255); 
 
-            case 2: // LEVEL 3: Radioactive (Toxic Lime & Danger Orange)
-                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(50, 255, 0); // Toxic Lime Green
-                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 100, 0); // Hazard Orange
+            case 2:
+                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(50, 255, 0); 
+                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 100, 0); 
                 if (symbol == GameSymbols.BULLET) return new Color(50, 255, 0);
                 if (symbol == GameSymbols.ASTEROID_WEAK || symbol == GameSymbols.ASTEROID_NORMAL || symbol == GameSymbols.ASTEROID_HEAVY) return new Color(100, 255, 0);
-                
-                // Text: Pure Green
                 return new Color(0, 255, 0); 
 
-            case 3: // LEVEL 4: Blood Moon (Laser Red & Stark Silver)
-                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 0, 50); // Piercing Laser Red
-                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 255, 255); // Stark Bright White
-                if (symbol == GameSymbols.BULLET) return new Color(255, 0, 0); // Pure Red
+            case 3:
+                if (symbol == '*' || symbol == '°' || symbol == ',' || symbol == '\'' || symbol == '`') return new Color(255, 0, 50); 
+                if (symbol == GameSymbols.PLAYER || symbol == GameSymbols.PLAYER_SHIELDED) return new Color(255, 255, 255); 
+                if (symbol == GameSymbols.BULLET) return new Color(255, 0, 0); 
                 if (symbol == GameSymbols.ASTEROID_WEAK || symbol == GameSymbols.ASTEROID_NORMAL || symbol == GameSymbols.ASTEROID_HEAVY) return new Color(200, 0, 0);
-                
-                // Text: Crimson Red
                 return new Color(255, 50, 50); 
         }
-
         return Color.WHITE; 
     }
-
 
     private boolean isAsteroidSpriteSymbol(char symbol) {
         return symbol == '/' || symbol == '\\' || symbol == '<' || symbol == '>'
@@ -276,5 +301,4 @@ public class FixedGridPanel extends JPanel {
     public void setCurrentLevel(int level) {
         this.currentLevel = level;
     }
-
 }
