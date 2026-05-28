@@ -189,7 +189,7 @@ public class RetroTextRenderer {
             return frame.getStatusMessage();
         }
 
-        if (frame.isStartScreen()) return "FIXED GRID + UNICODE RETRO STYLE";
+        if (frame.isStartScreen()) return "CHOOSE AN OPTION"; 
         if (frame.isLevelIntro()) return "BIG TARGETS WITH CAPPED SPEED";
         if (frame.isLevelUp()) return "UPGRADES HAVE CAPS FOR BALANCE";
         if (frame.isPaused()) return "GAME LOOP STOPPED TEMPORARILY";
@@ -197,11 +197,11 @@ public class RetroTextRenderer {
         if (frame.isGameOver()) return "THANKS FOR PLAYING";
         if (frame.isPlayerHitFlash()) return "WARNING: SHIP HIT OR SHIELD USED!";
 
-        String next = "NEXT " + padLeft(String.valueOf(frame.getNextLevelScore()), 4, '0');
-        String fire = "F" + frame.getFireRateLevel() + "/" + frame.getFireRateCap();
-        String shot = "S" + frame.getShotLevel() + "/" + frame.getShotCap();
-        String shield = "SH" + frame.getShieldCharges() + "/" + frame.getShieldCap();
-        return next + "  " + fire + "  " + shot + "  " + shield;
+        String next = "NEXT CORVETTE TIER " + padLeft(String.valueOf(frame.getNextLevelScore()), 4, '0');
+        String fire = "WEAPON MATRIX F" + frame.getFireRateLevel() + "/" + frame.getFireRateCap();
+        String shot = "SPREAD S" + frame.getShotLevel() + "/" + frame.getShotCap();
+        String shield = "DEFLECTOR SH" + frame.getShieldCharges() + "/" + frame.getShieldCap();
+        return next + "  |  " + fire + "  " + shot + "  " + shield;
     }
 
     private String borderLine(char left, char fill, char right) {

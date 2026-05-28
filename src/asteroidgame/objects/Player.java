@@ -60,16 +60,17 @@ public class Player extends GameObject {
 
         lastShotFrame = currentFrame;
 
+        // By spawning at 'y', the engine's immediate update shifts them to 'y - 1',
+        // perfectly connecting the base of the laser to the nose of the ship!
         if (shotLevel == 0) {
-            firedBullets.add(new Bullet(x, y - 1, boardWidth));
+            firedBullets.add(new Bullet(x, y, boardWidth));
         } else if (shotLevel == 1) {
-            // Upgrade should never remove the center shot.
-            firedBullets.add(new Bullet(x, y - 1, boardWidth));
-            firedBullets.add(new Bullet(x + 1, y - 1, boardWidth));
+            firedBullets.add(new Bullet(x - 1, y, boardWidth));
+            firedBullets.add(new Bullet(x + 1, y, boardWidth));
         } else {
-            firedBullets.add(new Bullet(x - 1, y - 1, boardWidth));
-            firedBullets.add(new Bullet(x, y - 1, boardWidth));
-            firedBullets.add(new Bullet(x + 1, y - 1, boardWidth));
+            firedBullets.add(new Bullet(x - 1, y, boardWidth));
+            firedBullets.add(new Bullet(x, y, boardWidth));
+            firedBullets.add(new Bullet(x + 1, y, boardWidth));
         }
 
         return firedBullets;

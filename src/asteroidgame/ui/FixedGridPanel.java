@@ -147,10 +147,14 @@ public class FixedGridPanel extends JPanel {
                 
                 if (c != ' ') {
                     Color baseColor = getColorForSymbol(c);
-                    int drawX = col * cellWidth;
+                    
+                    // --- PERFECT CENTERING MATH ---
+                    // Gets the true width of the specific character and centers it in the cell
+                    int charWidth = g.getFontMetrics().charWidth(c);
+                    int drawX = (col * cellWidth) + ((cellWidth - charWidth) / 2);
                     int drawY = row * cellHeight + baselineOffset;
 
-
+                    // --- V-SYNC DISTORTION GLITCH ---
                     if (Math.abs(drawY - trackingY) < 20) {
                         drawX += (random.nextBoolean() ? 1 : -1); 
                     }
@@ -211,6 +215,8 @@ public class FixedGridPanel extends JPanel {
         if (symbol == GameSymbols.PLAYER_HIT) return new Color(255, 100, 100); 
         if (symbol == GameSymbols.POWER_UP_LIFE || symbol == GameSymbols.LIFE || symbol == GameSymbols.SHIELD) return new Color(255, 235, 100); 
         if (symbol == '╔' || symbol == '╗' || symbol == '╚' || symbol == '╝' || symbol == '║' || symbol == '═' || symbol == '╠' || symbol == '╣' || symbol == '─') return new Color(170, 210, 255); 
+        if (symbol == GameSymbols.WARNING_LEFT || symbol == GameSymbols.WARNING_RIGHT) return new Color(255, 50, 50); // Danger Red
+        if (symbol == GameSymbols.ENEMY_BULLET) return new Color(255, 50, 50);
 
         int palette = (currentLevel - 1) % 4; 
 

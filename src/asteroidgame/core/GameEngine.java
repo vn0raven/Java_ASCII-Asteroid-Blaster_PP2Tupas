@@ -6,6 +6,7 @@ import asteroidgame.managers.CollisionResult;
 import asteroidgame.managers.HighScoreManager;
 import asteroidgame.managers.PowerUpSpawner;
 import asteroidgame.managers.ScoreManager;
+import asteroidgame.managers.UFOSpawner;
 import asteroidgame.managers.UpgradeManager;
 import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
@@ -13,6 +14,7 @@ import asteroidgame.objects.Drawable;
 import asteroidgame.objects.Explosion;
 import asteroidgame.objects.Player;
 import asteroidgame.objects.PowerUp;
+import asteroidgame.objects.UFO;
 import asteroidgame.objects.Updatable;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class GameEngine {
     private List<Asteroid> asteroids;
     private List<PowerUp> powerUps;
     private List<Explosion> explosions;
+    private List<UFO> ufos;
     private CollisionManager collisionManager;
     private ScoreManager scoreManager;
     private UpgradeManager upgradeManager;
@@ -41,6 +44,7 @@ public class GameEngine {
     private HighScoreManager highScoreManager;
     private AsteroidSpawner asteroidSpawner; 
     private PowerUpSpawner powerUpSpawner;
+    private UFOSpawner ufoSpawner;
 
     private int frameCount;
     private int asteroidsDestroyed;
@@ -62,6 +66,7 @@ public class GameEngine {
         board = new GameBoard(BOARD_WIDTH, BOARD_HEIGHT);
         bullets = new ArrayList<Bullet>();
         asteroids = new ArrayList<Asteroid>();
+        ufos = new ArrayList<UFO>();
         powerUps = new ArrayList<PowerUp>();  
         explosions = new ArrayList<Explosion>();   
         collisionManager = new CollisionManager();
@@ -70,6 +75,7 @@ public class GameEngine {
         highScoreManager = new HighScoreManager();
         asteroidSpawner = new AsteroidSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
         powerUpSpawner = new PowerUpSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
+        ufoSpawner = new UFOSpawner(BOARD_WIDTH, BOARD_HEIGHT);
         random = new Random();   
         resetToStartScreen(); 
     }
@@ -217,6 +223,12 @@ public class GameEngine {
             powerUps.add(newPowerUp);
         }
 
+        UFO newUFO = ufoSpawner.attemptSpawn(frameCount, scoreManager.getLevel(), ufos.size());
+        if (newUFO != null) {
+            ufos.add(newUFO);
+            SoundManager.playSound("hit.wav"); // Plays a warning ping when the !!! flashes!
+        }
+
         updateObjects();
         checkCollisions();
         removeInactiveObjects();
@@ -270,6 +282,7 @@ public class GameEngine {
         bullets.clear();
         asteroids.clear();
         powerUps.clear();
+        ufos.clear();
         scoreManager.reset();
         explosions.clear();
 
@@ -290,6 +303,7 @@ public class GameEngine {
         bullets.clear();
         asteroids.clear();
         powerUps.clear();
+        ufos.clear();
         explosions.clear();
         dangerLevel = 0;
     }
@@ -327,23 +341,36 @@ public class GameEngine {
         player.update();   
         updateList(bullets);
         updateList(asteroids);
+        updateList(ufos);
         updateList(powerUps);
         updateList(explosions);
+        
     }
 
     private void checkCollisions() {
-        CollisionResult result = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids, explosions);
-        scoreManager.addPoints(result.getEarnedPoints());
-        asteroidsDestroyed += result.getDestroyedCount();
+        // 1. ASTEROID COLLISIONS
+        CollisionResult asteroidResult = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids, explosions);
+        scoreManager.addPoints(asteroidResult.getEarnedPoints());
+        asteroidsDestroyed += asteroidResult.getDestroyedCount();
 
-        if (result.getDestroyedCount() > 0) {
-            setStatusMessage("ASTEROID DESTROYED  +" + result.getEarnedPoints());
+        if (asteroidResult.getDestroyedCount() > 0) {
+            setStatusMessage("ASTEROID DESTROYED  +" + asteroidResult.getEarnedPoints());
             SoundManager.playSound("explosion.wav");
-        } else if (result.getDamagedCount() > 0) {
-            setStatusMessage("ASTEROID CRACKED  +" + result.getEarnedPoints());
+        } else if (asteroidResult.getDamagedCount() > 0) {
+            setStatusMessage("ASTEROID CRACKED  +" + asteroidResult.getEarnedPoints());
             SoundManager.playSound("hit.wav");
         }
 
+        // 2. UFO COLLISIONS
+        CollisionResult ufoResult = collisionManager.checkBulletUFOCollisions(bullets, ufos, explosions);
+        scoreManager.addPoints(ufoResult.getEarnedPoints());
+        
+        if (ufoResult.getDestroyedCount() > 0) {
+            setStatusMessage("ALIEN SHIP DESTROYED  +50");
+            SoundManager.playSound("explosion.wav");
+        }
+
+        // 3. POWER-UPS
         int collected = collisionManager.checkPlayerPowerUpCollision(player, powerUps);
         if (collected > 0) {
             powerUpsCollected += collected;
@@ -351,8 +378,11 @@ public class GameEngine {
             setStatusMessage("POWER-UP COLLECTED  +15");
         }
 
-        boolean playerWasHit = collisionManager.checkPlayerAsteroidCollision(player, asteroids);
-        if (playerWasHit) {
+        // 4. PLAYER DAMAGE CHECK (Check both Asteroids AND UFOs)
+        boolean hitByAsteroid = collisionManager.checkPlayerAsteroidCollision(player, asteroids);
+        boolean hitByUFO = collisionManager.checkPlayerUFOCollision(player, ufos);
+
+        if (hitByAsteroid || hitByUFO) {
             if (player.hasShield()) {
                 player.useShield();
                 setStatusMessage("SHIELD BLOCKED THE HIT");
@@ -370,6 +400,14 @@ public class GameEngine {
             Bullet bullet = bulletIterator.next();
             if (!bullet.isActive()) {
                 bulletIterator.remove();
+            }
+        }
+
+        Iterator<UFO> ufoIterator = ufos.iterator();
+        while (ufoIterator.hasNext()) {
+            UFO ufo = ufoIterator.next();
+            if (!ufo.isActive()) {
+                ufoIterator.remove();
             }
         }
 
@@ -459,6 +497,7 @@ public class GameEngine {
             drawList(explosions);
             drawList(powerUps);
             drawList(asteroids);
+            drawList(ufos);
             drawList(bullets);
 
             if (player.isAlive()) {
