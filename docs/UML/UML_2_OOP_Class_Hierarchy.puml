@@ -1,0 +1,114 @@
+@startuml
+title <b>ASCII Asteroid Blaster - OOP Class Hierarchy</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam defaultFontName Arial
+hide empty members
+
+top to bottom direction
+
+interface Updatable {
+  + update()
+}
+
+interface Drawable {
+  + draw(GameBoard)
+}
+
+abstract class GameObject {
+  - int x
+  - int y
+  - char symbol
+  - boolean active
+  + update()
+  + draw(GameBoard)
+  + getX()
+  + getY()
+  + isActive()
+}
+
+class Player {
+  - int lives
+  - int maxLives
+  - int facingDx
+  - int facingDy
+  + move(int dx, int dy)
+  + shoot()
+  + loseLife()
+  + isAlive()
+}
+
+class Bullet {
+  - int dx
+  - int dy
+  - int speed
+  + update()
+}
+
+class EnemyBullet {
+  - int dx
+  - int dy
+  + update()
+}
+
+abstract class Asteroid {
+  - int health
+  - int dx
+  - int dy
+  - String[] sprite
+  + update()
+  + takeDamage()
+  + containsPoint(int x, int y)
+}
+
+class HeavyAsteroid
+class NormalAsteroid
+class SmallAsteroid
+class MeteorShard
+
+class UfoEnemy {
+  - int health
+  - int shootCooldown
+  + update()
+  + shootAt(Player)
+}
+
+abstract class PowerUp {
+  + applyEffect(Player)
+}
+
+class ExtraLifePowerUp
+
+class Explosion {
+  + update()
+  + draw(GameBoard)
+}
+
+Updatable <|.. GameObject
+Drawable <|.. GameObject
+
+GameObject <|-- Player
+GameObject <|-- Bullet
+GameObject <|-- EnemyBullet
+GameObject <|-- Asteroid
+GameObject <|-- MeteorShard
+GameObject <|-- UfoEnemy
+GameObject <|-- PowerUp
+
+Asteroid <|-- HeavyAsteroid
+Asteroid <|-- NormalAsteroid
+Asteroid <|-- SmallAsteroid
+
+PowerUp <|-- ExtraLifePowerUp
+
+Updatable <|.. Explosion
+Drawable <|.. Explosion
+
+Player --> Bullet : creates
+UfoEnemy --> EnemyBullet : creates
+PowerUp --> Player : affects
+
+@enduml

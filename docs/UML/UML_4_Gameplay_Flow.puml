@@ -1,0 +1,41 @@
+@startuml
+title <b>ASCII Asteroid Blaster - Gameplay Flow</b>
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam linetype ortho
+skinparam activity {
+  BorderColor black
+  FontColor black
+}
+
+start
+
+:Player presses movement or shoot keys;
+:KeyboardInput records input;
+:GameEngine reads InputState;
+:GameEngine checks current GameState;
+
+if (<b>Game is playing?</b>) then (Yes)
+
+  :Move player and update facing direction;
+  :Update bullets, asteroids, UFOs,\nshards, and effects;
+  :Spawn asteroids, meteor clusters,\nUFOs, and power-ups;
+  :CollisionManager checks collisions;
+  :Update score, lives, upgrades,\nand danger meter;
+  :SoundManager plays music and effects;
+  :Build GameFrame;
+  :RetroTextRenderer prepares visual output;
+  :FixedGridPanel displays the screen;
+
+else (No)
+
+  :Show start, pause, upgrade,\ngame over, or victory screen;
+
+endif
+
+stop
+
+@enduml
