@@ -1,0 +1,95 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package asteroidgame.app {
+  class Main
+}
+
+package asteroidgame.core {
+  class GameConfig
+  class GameEngine
+  class GameBoard
+  class GameFrame
+  class InputState
+  enum GameState
+}
+
+package asteroidgame.objects {
+  abstract class GameObject {
+    - int x
+    - int y
+    - char symbol
+    - boolean active
+    + update()
+    + draw(GameBoard)
+  }
+
+  class Player
+  class Bullet
+  abstract class Asteroid
+  class NormalAsteroid
+  class HeavyAsteroid
+  class SmallAsteroid
+  abstract class PowerUp
+  class ExtraLifePowerUp
+  class GameSymbols
+}
+
+package asteroidgame.managers {
+  class CollisionManager
+  class CollisionResult
+  class ScoreManager
+  class UpgradeManager
+}
+
+package asteroidgame.ui {
+  class SwingLauncher
+  class SwingGameWindow
+  class KeyboardInput
+  class FixedGridPanel
+  class RetroTextRenderer
+}
+
+Main --> SwingLauncher
+SwingLauncher --> SwingGameWindow
+SwingGameWindow --> GameEngine
+SwingGameWindow --> KeyboardInput
+SwingGameWindow --> FixedGridPanel
+SwingGameWindow --> RetroTextRenderer
+
+GameEngine --> GameBoard
+GameEngine --> GameFrame
+GameEngine --> InputState
+GameEngine --> GameState
+GameEngine --> CollisionManager
+GameEngine --> ScoreManager
+GameEngine --> UpgradeManager
+GameEngine --> Player
+GameEngine --> Bullet
+GameEngine --> Asteroid
+GameEngine --> PowerUp
+GameEngine --> GameConfig
+
+GameObject <|-- Player
+GameObject <|-- Bullet
+GameObject <|-- Asteroid
+Asteroid <|-- NormalAsteroid
+Asteroid <|-- HeavyAsteroid
+Asteroid <|-- SmallAsteroid
+GameObject <|-- PowerUp
+PowerUp <|-- ExtraLifePowerUp
+
+CollisionManager --> CollisionResult
+CollisionManager --> Player
+CollisionManager --> Bullet
+CollisionManager --> Asteroid
+CollisionManager --> PowerUp
+
+RetroTextRenderer --> GameFrame
+FixedGridPanel --> GameSymbols
+Player --> Bullet
+Player --> GameSymbols
+Asteroid --> GameSymbols
+PowerUp --> Player
+
+@enduml
