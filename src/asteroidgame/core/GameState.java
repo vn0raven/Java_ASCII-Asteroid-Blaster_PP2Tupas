@@ -10,5 +10,6 @@ public enum GameState {
     PAUSED,
     LEVEL_UP,
     VICTORY,
-    GAME_OVER
+    GAME_OVER,
+    HIGH_SCORE_SCREEN
 }

@@ -30,6 +30,8 @@ public class GameFrame {
     private int dangerLimit;
     private String statusMessage;
     private String[] upgradeMenuLines;
+    private int menuSelectedIndex;
+    private int highScore;
 
     public GameFrame(int boardWidth, int boardHeight, char[][] grid,
                      int score, int lives, int maxLives, int level, int maxLevel,
@@ -41,7 +43,9 @@ public class GameFrame {
                      int shieldCharges, int shieldCap,
                      int dangerLevel, int dangerLimit,
                      String statusMessage,
-                     String[] upgradeMenuLines) {
+                     String[] upgradeMenuLines,
+                     int menuSelectedIndex,
+                    int highScore) {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.grid = grid;
@@ -67,6 +71,8 @@ public class GameFrame {
         this.dangerLimit = dangerLimit;
         this.statusMessage = statusMessage;
         this.upgradeMenuLines = upgradeMenuLines;
+        this.menuSelectedIndex = menuSelectedIndex;
+        this.highScore = highScore;
     }
 
     public int getBoardWidth() { return boardWidth; }
@@ -94,6 +100,8 @@ public class GameFrame {
     public int getDangerLimit() { return dangerLimit; }
     public String getStatusMessage() { return statusMessage; }
     public String[] getUpgradeMenuLines() { return upgradeMenuLines; }
+    public int getMenuSelectedIndex() { return menuSelectedIndex; }
+    public int getHighScore() { return highScore; } 
 
     public boolean isStartScreen() { return state == GameState.START_SCREEN; }
     public boolean isLevelIntro() { return state == GameState.LEVEL_INTRO; }
@@ -102,4 +110,5 @@ public class GameFrame {
     public boolean isLevelUp() { return state == GameState.LEVEL_UP; }
     public boolean isVictory() { return state == GameState.VICTORY; }
     public boolean isGameOver() { return state == GameState.GAME_OVER; }
+    public boolean isHighScoreScreen() { return state == GameState.HIGH_SCORE_SCREEN; } 
 }

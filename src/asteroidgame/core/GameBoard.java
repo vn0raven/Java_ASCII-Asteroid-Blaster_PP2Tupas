@@ -1,8 +1,7 @@
 package asteroidgame.core;
 
 /**
- * Represents the fixed playable retro text grid.
- * This class stores symbols only and does not use Swing.
+ * Represents the 2D grid of characters that make up the game screen.
  */
 public class GameBoard {
     private int width;
@@ -16,37 +15,47 @@ public class GameBoard {
         clear();
     }
 
+    /**
+     * Wipes the board clean with empty spaces.
+     */
     public void clear() {
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                grid[row][col] = ' ';
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                grid[y][x] = ' ';
             }
         }
     }
 
+    /**
+     * Safely places a character on the grid.
+     */
     public void placeSymbol(int x, int y, char symbol) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             grid[y][x] = symbol;
         }
     }
 
+    /**
+     * Retrieves a character from the grid.
+     */
+    public char getSymbol(int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            return grid[y][x];
+        }
+        return ' '; 
+    }
+
+    /**
+     * Creates a safe copy of the current grid state for the renderer.
+     */
     public char[][] copyGrid() {
         char[][] copy = new char[height][width];
-
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                copy[row][col] = grid[row][col];
-            }
+        for (int y = 0; y < height; y++) {
+            System.arraycopy(grid[y], 0, copy[y], 0, width);
         }
-
         return copy;
     }
 
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
 }

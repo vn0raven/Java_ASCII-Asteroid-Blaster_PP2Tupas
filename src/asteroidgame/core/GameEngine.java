@@ -1,16 +1,19 @@
 package asteroidgame.core;
 
+import asteroidgame.managers.AsteroidSpawner;
 import asteroidgame.managers.CollisionManager;
 import asteroidgame.managers.CollisionResult;
+import asteroidgame.managers.HighScoreManager;
+import asteroidgame.managers.PowerUpSpawner;
 import asteroidgame.managers.ScoreManager;
 import asteroidgame.managers.UpgradeManager;
 import asteroidgame.objects.Asteroid;
 import asteroidgame.objects.Bullet;
-import asteroidgame.objects.ExtraLifePowerUp;
-import asteroidgame.objects.HeavyAsteroid;
-import asteroidgame.objects.NormalAsteroid;
+import asteroidgame.objects.Drawable;
+import asteroidgame.objects.Explosion;
 import asteroidgame.objects.Player;
 import asteroidgame.objects.PowerUp;
+import asteroidgame.objects.Updatable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,10 +33,14 @@ public class GameEngine {
     private List<Bullet> bullets;
     private List<Asteroid> asteroids;
     private List<PowerUp> powerUps;
+    private List<Explosion> explosions;
     private CollisionManager collisionManager;
     private ScoreManager scoreManager;
     private UpgradeManager upgradeManager;
     private Random random;
+    private HighScoreManager highScoreManager;
+    private AsteroidSpawner asteroidSpawner; 
+    private PowerUpSpawner powerUpSpawner;
 
     private int frameCount;
     private int asteroidsDestroyed;
@@ -44,17 +51,27 @@ public class GameEngine {
     private String statusMessage;
     private GameState state;
     private boolean quitRequested;
+    private int menuSelectedIndex;
+
+    private String targetStatusMessage = ""; 
+    private int typewriterIndex = 0;
+    private int typewriterTimer = 0;
+    
 
     public GameEngine() {
         board = new GameBoard(BOARD_WIDTH, BOARD_HEIGHT);
         bullets = new ArrayList<Bullet>();
         asteroids = new ArrayList<Asteroid>();
-        powerUps = new ArrayList<PowerUp>();
+        powerUps = new ArrayList<PowerUp>();  
+        explosions = new ArrayList<Explosion>();   
         collisionManager = new CollisionManager();
         scoreManager = new ScoreManager();
         upgradeManager = new UpgradeManager();
-        random = new Random();
-        resetToStartScreen();
+        highScoreManager = new HighScoreManager();
+        asteroidSpawner = new AsteroidSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
+        powerUpSpawner = new PowerUpSpawner(BOARD_WIDTH, BOARD_HEIGHT); 
+        random = new Random();   
+        resetToStartScreen(); 
     }
 
     public void update(InputState input) {
@@ -66,14 +83,49 @@ public class GameEngine {
         }
 
         if (state == GameState.START_SCREEN) {
+            // Move cursor up
+            if (input.isUpRequested()) {
+                SoundManager.playSound("scrollup.wav");
+                menuSelectedIndex--;
+                if (menuSelectedIndex < 0) menuSelectedIndex = 2; // Loop to bottom
+            }
+            
+            // Move cursor down
+            if (input.isDownRequested()) {
+                SoundManager.playSound("scrolldown.wav");
+                menuSelectedIndex++;
+                if (menuSelectedIndex > 2) menuSelectedIndex = 0; // Loop to top
+            }
+
+            // Execute selection
             if (input.isStartRequested() || input.isShootRequested()) {
-                resetAndShowLevelIntro();
+                SoundManager.playSound("click.wav");
+                if (menuSelectedIndex == 0) {
+                    resetAndShowLevelIntro();
+                } else if (menuSelectedIndex == 1) {
+                    state = GameState.HIGH_SCORE_SCREEN; 
+                    setStatusMessage("LOCAL LEADERBOARD");
+                } else if (menuSelectedIndex == 2) {
+                    quitRequested = true;
+                }
+            }
+            return;
+        }
+
+        if (state == GameState.HIGH_SCORE_SCREEN) {
+            if (input.isMenuRequested() || input.isStartRequested()) {
+                resetToStartScreen();
             }
             return;
         }
 
         if (state == GameState.LEVEL_INTRO) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isStartRequested() || input.isShootRequested()) {
+                SoundManager.playSound("click.wav");
                 clearDangerousObjects();
                 setStatusMessage("LEVEL " + scoreManager.getLevel() + " START!");
                 state = GameState.PLAYING;
@@ -82,6 +134,10 @@ public class GameEngine {
         }
 
         if (state == GameState.VICTORY) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isRestartRequested() || input.isStartRequested()) {
                 resetAndShowLevelIntro();
             }
@@ -89,6 +145,10 @@ public class GameEngine {
         }
 
         if (state == GameState.GAME_OVER) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isRestartRequested() || input.isStartRequested()) {
                 resetAndShowLevelIntro();
             }
@@ -101,6 +161,10 @@ public class GameEngine {
         }
 
         if (state == GameState.PAUSED) {
+            if (input.isMenuRequested()) { 
+                resetToStartScreen();
+                return;
+            }
             if (input.isPauseRequested()) {
                 state = GameState.PLAYING;
                 setStatusMessage("RESUMED");
@@ -142,19 +206,33 @@ public class GameEngine {
         }
 
         handlePlayerInput(input);
-        spawnAsteroids();
-        spawnPowerUps();
+
+        Asteroid newAsteroid = asteroidSpawner.attemptSpawn(frameCount, scoreManager.getLevel(), asteroids.size());
+        if (newAsteroid != null) {
+            asteroids.add(newAsteroid);
+        }
+
+        PowerUp newPowerUp = powerUpSpawner.attemptSpawn(frameCount, scoreManager.getLevel());
+        if (newPowerUp != null) {
+            powerUps.add(newPowerUp);
+        }
+
         updateObjects();
         checkCollisions();
         removeInactiveObjects();
 
         if (!player.isAlive()) {
+            SoundManager.stopMusic(); 
+            
+            highScoreManager.saveHighScore(scoreManager.getScore()); 
+            clearDangerousObjects();
             state = GameState.GAME_OVER;
             setStatusMessage("GAME OVER");
             return;
         }
 
         if (scoreManager.isFinalLevelCleared()) {
+            highScoreManager.saveHighScore(scoreManager.getScore()); 
             clearDangerousObjects();
             state = GameState.VICTORY;
             setStatusMessage("MISSION COMPLETE");
@@ -162,19 +240,26 @@ public class GameEngine {
         }
 
         if (scoreManager.isReadyForLevelUp()) {
+            clearDangerousObjects(); 
             state = GameState.LEVEL_UP;
             setStatusMessage("LEVEL CLEAR - CHOOSE UPGRADE");
         }
+
     }
 
     private void resetToStartScreen() {
+        SoundManager.playMusic("menu_music.wav"); 
+        
         resetFieldData();
         state = GameState.START_SCREEN;
         quitRequested = false;
+        menuSelectedIndex = 0; 
         setStatusMessage("READY");
     }
 
     private void resetAndShowLevelIntro() {
+        SoundManager.playMusic("game_music.wav"); 
+        
         resetFieldData();
         state = GameState.LEVEL_INTRO;
         quitRequested = false;
@@ -186,6 +271,7 @@ public class GameEngine {
         asteroids.clear();
         powerUps.clear();
         scoreManager.reset();
+        explosions.clear();
 
         int startX = BOARD_WIDTH / 2;
         int startY = BOARD_HEIGHT - 1;
@@ -204,6 +290,7 @@ public class GameEngine {
         bullets.clear();
         asteroids.clear();
         powerUps.clear();
+        explosions.clear();
         dangerLevel = 0;
     }
 
@@ -218,53 +305,11 @@ public class GameEngine {
 
         if (input.isShootRequested()) {
             List<Bullet> firedBullets = player.shoot(frameCount);
+            if(!firedBullets.isEmpty()){
+                SoundManager.playSound("shoot.wav");
+            }
             bullets.addAll(firedBullets);
         }
-    }
-
-    private void spawnAsteroids() {
-        int level = scoreManager.getLevel();
-        int spawnInterval = Math.max(20, 44 - level * 3);
-
-        if (asteroids.size() >= GameConfig.MAX_ASTEROIDS_ON_SCREEN) {
-            return;
-        }
-
-        if (frameCount % spawnInterval == 0) {
-            asteroids.add(createRandomAsteroid(level));
-        }
-
-        if (level >= 5 && frameCount % (spawnInterval * 2) == 0
-                && asteroids.size() < GameConfig.MAX_ASTEROIDS_ON_SCREEN) {
-            asteroids.add(createRandomAsteroid(level));
-        }
-    }
-
-    private Asteroid createRandomAsteroid(int level) {
-        int x = chooseSpawnX();
-        int roll = random.nextInt(100);
-
-        int normalSpeed = Math.max(GameConfig.MIN_ASTEROID_SPEED, 9 - level / 2);
-        int heavySpeed = Math.max(GameConfig.MIN_HEAVY_ASTEROID_SPEED, 10 - level / 2);
-
-        // No tiny asteroid spawns. The game only creates big, readable targets.
-        if (level >= 3 && roll < 35 + level * 5) {
-            return new HeavyAsteroid(x, 0, BOARD_HEIGHT, heavySpeed);
-        }
-
-        return new NormalAsteroid(x, 0, BOARD_HEIGHT, normalSpeed);
-    }
-
-    private int chooseSpawnX() {
-        for (int attempt = 0; attempt < 15; attempt++) {
-            int x = 1 + random.nextInt(BOARD_WIDTH - 2);
-
-            if (isSpawnPositionClear(x)) {
-                return x;
-            }
-        }
-
-        return 1 + random.nextInt(BOARD_WIDTH - 2);
     }
 
     private boolean isSpawnPositionClear(int x) {
@@ -278,44 +323,25 @@ public class GameEngine {
         return true;
     }
 
-    private void spawnPowerUps() {
-        int powerUpInterval = Math.max(160, 260 - scoreManager.getLevel() * 10);
-
-        if (frameCount > 0 && frameCount % powerUpInterval == 0) {
-            int chance = random.nextInt(100);
-
-            if (chance < 40) {
-                int x = random.nextInt(BOARD_WIDTH);
-                powerUps.add(new ExtraLifePowerUp(x, 0, BOARD_HEIGHT));
-            }
-        }
-    }
-
     private void updateObjects() {
-        player.update();
-
-        for (Bullet bullet : bullets) {
-            bullet.update();
-        }
-
-        for (Asteroid asteroid : asteroids) {
-            asteroid.update();
-        }
-
-        for (PowerUp powerUp : powerUps) {
-            powerUp.update();
-        }
+        player.update();   
+        updateList(bullets);
+        updateList(asteroids);
+        updateList(powerUps);
+        updateList(explosions);
     }
 
     private void checkCollisions() {
-        CollisionResult result = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids);
+        CollisionResult result = collisionManager.checkBulletAsteroidCollisions(bullets, asteroids, explosions);
         scoreManager.addPoints(result.getEarnedPoints());
         asteroidsDestroyed += result.getDestroyedCount();
 
         if (result.getDestroyedCount() > 0) {
             setStatusMessage("ASTEROID DESTROYED  +" + result.getEarnedPoints());
+            SoundManager.playSound("explosion.wav");
         } else if (result.getDamagedCount() > 0) {
             setStatusMessage("ASTEROID CRACKED  +" + result.getEarnedPoints());
+            SoundManager.playSound("hit.wav");
         }
 
         int collected = collisionManager.checkPlayerPowerUpCollision(player, powerUps);
@@ -358,6 +384,14 @@ public class GameEngine {
             }
         }
 
+        Iterator<Explosion> explosionIterator = explosions.iterator();
+        while (explosionIterator.hasNext()) {
+            Explosion explosion = explosionIterator.next();
+            if (!explosion.isActive()) {
+                explosionIterator.remove();
+            }
+        }
+
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
         while (powerUpIterator.hasNext()) {
             PowerUp powerUp = powerUpIterator.next();
@@ -381,17 +415,38 @@ public class GameEngine {
     }
 
     private void setStatusMessage(String message) {
-        statusMessage = message;
+        targetStatusMessage = message;
+        statusMessage = ""; 
+        
+        typewriterIndex = 0;
+        typewriterTimer = 0;
         messageCounter = GameConfig.MESSAGE_DURATION;
     }
 
     private void updateStatusTimer() {
-        if (messageCounter > 0) {
-            messageCounter--;
-        }
+        if (targetStatusMessage != null && !targetStatusMessage.isEmpty()) {
+            
+            if (typewriterIndex < targetStatusMessage.length()) {
+                typewriterTimer++;
+                
+                if (typewriterTimer >= 2) { 
+                    statusMessage += targetStatusMessage.charAt(typewriterIndex);
+                    typewriterIndex++;
+                    typewriterTimer = 0;
+                    
+                    if (statusMessage.charAt(statusMessage.length() - 1) != ' ') {
 
-        if (messageCounter == 0) {
-            statusMessage = "";
+                    }
+                }
+            } 
+            else {
+                if (messageCounter > 0) {
+                    messageCounter--;
+                } else {
+                    statusMessage = "";
+                    targetStatusMessage = "";
+                }
+            }
         }
     }
 
@@ -400,17 +455,11 @@ public class GameEngine {
 
         if (state == GameState.PLAYING || state == GameState.PAUSED
                 || state == GameState.LEVEL_UP || state == GameState.GAME_OVER) {
-            for (PowerUp powerUp : powerUps) {
-                powerUp.draw(board);
-            }
-
-            for (Asteroid asteroid : asteroids) {
-                asteroid.draw(board);
-            }
-
-            for (Bullet bullet : bullets) {
-                bullet.draw(board);
-            }
+            
+            drawList(explosions);
+            drawList(powerUps);
+            drawList(asteroids);
+            drawList(bullets);
 
             if (player.isAlive()) {
                 player.setHitSymbol(hitFlashCounter > 0);
@@ -443,11 +492,28 @@ public class GameEngine {
                 dangerLevel,
                 GameConfig.DANGER_LIMIT,
                 statusMessage,
-                upgradeManager.buildUpgradeMenu(player)
+                upgradeManager.buildUpgradeMenu(player),
+                menuSelectedIndex,
+                highScoreManager.getHighScore()
         );
     }
 
     public boolean isQuitRequested() {
         return quitRequested;
+    }
+
+    private void updateList(List<? extends Updatable> list) {
+        for (Updatable item : list) {
+            item.update();
+        }
+    }
+
+    private void drawList(List<? extends Drawable> list) {
+        for (Drawable item : list) {
+            if (item.isActive()) {
+                item.draw(board);
+            }
+        }
+
     }
 }

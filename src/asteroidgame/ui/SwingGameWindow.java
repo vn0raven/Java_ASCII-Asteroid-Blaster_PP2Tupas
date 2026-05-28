@@ -66,6 +66,7 @@ public class SwingGameWindow extends JFrame implements ActionListener {
 
     private void drawFrame() {
         GameFrame frame = engine.getCurrentFrame();
+        displayPanel.setCurrentLevel(frame.getLevel());
         displayPanel.setScreenText(renderer.render(frame));
     }
 }

@@ -68,11 +68,16 @@ public class RetroTextRenderer {
     private String getOverlayText(int row, GameFrame frame) {
         if (frame.isStartScreen()) {
             if (row == 2) return "ARCADE MODE: 6 LEVEL CAMPAIGN";
-            if (row == 4) return "BIG ASTEROIDS ONLY: ◉ → ● → ◎";
-            if (row == 6) return "NO TINY TARGETS - WIDE HITBOXES";
-            if (row == 8) return "SHOOT, SURVIVE, CLEAR, UPGRADE";
-            if (row == 10) return "MISSED ASTEROIDS RAISE DANGER";
-            if (row == 13) return "PRESS ENTER TO START";
+            
+            int sel = frame.getMenuSelectedIndex();
+            
+            // Draw the cursor pointing to the active selection
+            if (row == 6) return sel == 0 ? "► PLAY GAME ◄" : "  PLAY GAME  ";
+            if (row == 8) return sel == 1 ? "► HIGH SCORES ◄" : "  HIGH SCORES  ";
+            if (row == 10) return sel == 2 ? "► QUIT ◄" : "  QUIT  ";
+
+            if (row == 14) return "W/S OR UP/DOWN TO MOVE";
+            if (row == 15) return "PRESS ENTER TO SELECT";
         }
 
         if (frame.isLevelIntro()) {
@@ -120,6 +125,14 @@ public class RetroTextRenderer {
             if (row == 15) return "PRESS R TO RESTART";
         }
 
+        if (frame.isHighScoreScreen()) {
+            if (row == 2) return "✦ LOCAL LEADERBOARD ✦";    
+            if (row == 6) return "1. JACA    " + padLeft(String.valueOf(frame.getHighScore()), 6, '0');
+            if (row == 8) return "2. CPU     001000";
+            if (row == 10) return "3. CPU     000500";     
+            if (row == 15) return "PRESS ENTER OR M TO RETURN";
+        }
+
         return null;
     }
 
@@ -136,7 +149,6 @@ public class RetroTextRenderer {
         if (symbol != ' ') {
             return symbol;
         }
-
         // Stable star field. It does not animate, so the screen no longer feels like it is shifting.
         int pattern = (row * 19 + col * 13) % 131;
 
@@ -162,12 +174,14 @@ public class RetroTextRenderer {
 
     private String buildControls(GameFrame frame) {
         if (frame.isStartScreen()) return "ENTER START | Q QUIT";
-        if (frame.isLevelIntro()) return "ENTER LAUNCH | Q QUIT";
+        if (frame.isHighScoreScreen()) return "ENTER RETURN | Q QUIT";
+        if (frame.isLevelIntro()) return "ENTER LAUNCH | M MENU | Q QUIT";
         if (frame.isLevelUp()) return "1 FIRE | 2 LIFE | 3 SHOT | 4 SHIELD";
-        if (frame.isVictory()) return "R RESTART | Q QUIT";
-        if (frame.isGameOver()) return "R RESTART | Q QUIT";
-        if (frame.isPaused()) return "P RESUME | Q QUIT";
-        return "A/← D/→ MOVE | SPACE FIRE | P PAUSE";
+        if (frame.isVictory()) return "R RESTART | M MENU | Q QUIT";
+        if (frame.isGameOver()) return "R RESTART | M MENU | Q QUIT";
+        if (frame.isPaused()) return "P RESUME | M MENU | Q QUIT";   
+
+        return "A/← D/→ MOVE | SPACE FIRE | P PAUSE"; 
     }
 
     private String buildStatus(GameFrame frame) {
